@@ -1,6 +1,96 @@
 // mcp-bridge-auto.jsx
 // Auto-running MCP Bridge panel for After Effects
 
+// JSON Polyfill for ExtendScript
+if (typeof JSON === "undefined") {
+    JSON = {
+        stringify: function(obj, replacer, space) {
+            function serialize(obj) {
+                if (obj === null) return "null";
+                if (typeof obj === "undefined") return "undefined";
+                if (typeof obj === "string") return '"' + obj.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t") + '"';
+                if (typeof obj === "number" || typeof obj === "boolean") return String(obj);
+                if (obj instanceof Array) {
+                    var items = [];
+                    for (var i = 0; i < obj.length; i++) {
+                        items.push(serialize(obj[i]));
+                    }
+                    return "[" + items.join(",") + "]";
+                }
+                if (typeof obj === "object") {
+                    var items = [];
+                    for (var key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            items.push(serialize(key) + ":" + serialize(obj[key]));
+                        }
+                    }
+                    return "{" + items.join(",") + "}";
+                }
+                return "null";
+            }
+            
+            var result = serialize(obj);
+            
+            // Simple formatting if space is provided
+            if (space && typeof space === "number" && space > 0) {
+                var indent = "";
+                for (var i = 0; i < space; i++) indent += " ";
+                
+                // Basic pretty printing
+                result = result.replace(/,/g, ",\n" + indent);
+                result = result.replace(/\{/g, "{\n" + indent);
+                result = result.replace(/\}/g, "\n}");
+                result = result.replace(/\[/g, "[\n" + indent);
+                result = result.replace(/\]/g, "\n]");
+            }
+            
+            return result;
+        },
+        
+        parse: function(text) {
+            // Remove leading/trailing whitespace
+            text = text.replace(/^\s+|\s+$/g, "");
+            
+            // Check for empty or clearly invalid input
+            if (!text || text.length === 0) {
+                throw new Error("Invalid JSON: Empty input");
+            }
+            
+            // Basic validation before parsing
+            if (text.charAt(0) !== '{' && text.charAt(0) !== '[') {
+                throw new Error("Invalid JSON: Must start with { or [");
+            }
+            
+            // Use eval for parsing (note: this is generally unsafe but acceptable in controlled ExtendScript environment)
+            try {
+                return eval("(" + text + ")");
+            } catch (e) {
+                throw new Error("Invalid JSON: " + e.toString());
+            }
+        }
+    };
+}
+
+// Date.prototype.toISOString polyfill for ExtendScript
+if (!Date.prototype.toISOString) {
+    Date.prototype.toISOString = function() {
+        function pad(number) {
+            if (number < 10) {
+                return '0' + number;
+            }
+            return number;
+        }
+        
+        return this.getUTCFullYear() + '-' +
+               pad(this.getUTCMonth() + 1) + '-' +
+               pad(this.getUTCDate()) + 'T' +
+               pad(this.getUTCHours()) + ':' +
+               pad(this.getUTCMinutes()) + ':' +
+               pad(this.getUTCSeconds()) + '.' +
+               (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) + 'Z';
+    };
+}
+
 // Remove #include directives as we define functions below
 /*
 #include "createComposition.jsx"
@@ -804,6 +894,7 @@ panel.orientation = "column";
 panel.alignChildren = ["fill", "top"];
 panel.spacing = 10;
 panel.margins = 16;
+panel.preferredSize.width = 520; // Set minimum panel width to accommodate log area
 
 // Status display
 var statusText = panel.add("statictext", undefined, "Waiting for commands...");
@@ -813,8 +904,10 @@ statusText.alignment = ["fill", "top"];
 var logPanel = panel.add("panel", undefined, "Command Log");
 logPanel.orientation = "column";
 logPanel.alignChildren = ["fill", "fill"];
+logPanel.preferredSize.width = 500; // Increase panel width for better readability
 var logText = logPanel.add("edittext", undefined, "", {multiline: true, readonly: true});
 logText.preferredSize.height = 200;
+logText.preferredSize.width = 480; // Set text area width to be slightly smaller than panel
 
 // Auto-run checkbox
 var autoRunCheckbox = panel.add("checkbox", undefined, "Auto-run commands");
@@ -823,6 +916,94 @@ autoRunCheckbox.value = true;
 // Check interval (ms)
 var checkInterval = 2000;
 var isChecking = false;
+var lastProcessedTimestamp = 0; // Track last processed command
+
+// Helper function to safely read and validate JSON file
+function safeReadJSONFile(filePath, suppressNotFoundLog) {
+    var file = new File(filePath);
+    if (!file.exists) {
+        return null; // Silently return null if file doesn't exist
+    }
+    
+    var maxRetries = 5;
+    var retryCount = 0;
+    var content = "";
+    var isValidJSON = false;
+    
+    while (retryCount < maxRetries && !isValidJSON) {
+        try {
+            file.open("r");
+            content = file.read();
+            file.close();
+            
+            // More thorough validation
+            if (content && content.length > 0) {
+                // Remove any leading/trailing whitespace
+                content = content.replace(/^\s+|\s+$/g, "");
+                
+                // Check if it starts and ends correctly
+                if (content.charAt(0) === '{' && content.charAt(content.length - 1) === '}') {
+                    // Check for balanced braces and proper string handling
+                    var openBraces = 0;
+                    var closeBraces = 0;
+                    var inString = false;
+                    var escapeNext = false;
+                    
+                    for (var i = 0; i < content.length; i++) {
+                        var ch = content.charAt(i);
+                        
+                        if (escapeNext) {
+                            escapeNext = false;
+                        } else if (ch === '\\') {
+                            escapeNext = true;
+                        } else if (ch === '"') {
+                            inString = !inString;
+                        } else if (!inString) {
+                            if (ch === '{') openBraces++;
+                            if (ch === '}') closeBraces++;
+                        }
+                    }
+                    
+                    // Check if JSON looks complete
+                    if (openBraces === closeBraces && openBraces > 0 && !inString && !escapeNext) {
+                        // Try to parse it to make sure it's valid
+                        try {
+                            var parsed = JSON.parse(content);
+                            return parsed; // Return the parsed object
+                        } catch (parseTest) {
+                            // Not valid JSON yet, continue retrying
+                            if (retryCount === 0) {
+                                logToPanel("JSON parse attempt failed, retrying... (content preview: " + content.substring(0, 50) + "...)");
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Empty file, probably still being written
+                if (retryCount === 0) {
+                    logToPanel("Command file appears to be empty, waiting for content...");
+                }
+            }
+        } catch (fileError) {
+            if (retryCount === 0) {
+                logToPanel("File read attempt failed: " + fileError.toString());
+            }
+        }
+        
+        retryCount++;
+        if (retryCount < maxRetries) {
+            // Delay before retry
+            for (var j = 0; j < 3000000; j++) { /* delay */ }
+        }
+    }
+    
+    // Only log error if we actually found a file but couldn't parse it
+    if (retryCount >= maxRetries && content && content.length > 0) {
+        logToPanel("Failed to parse JSON after " + maxRetries + " attempts from: " + filePath + " (content length: " + content.length + ")");
+    }
+    
+    return null; // Failed to read valid JSON
+}
 
 // Command file path
 function getCommandFilePath() {
@@ -1016,8 +1197,29 @@ function executeCommand(command, args) {
                 result = applyEffectTemplate(args);
                 logToPanel("Returned from applyEffectTemplate.");
                 break;
+            case "bridgeTestEffects":
+                logToPanel("Executing bridgeTestEffects command...");
+                // Simple test command that returns success
+                result = JSON.stringify({
+                    status: "success",
+                    message: "Bridge test effects command executed successfully",
+                    timestamp: new Date().toISOString()
+                });
+                logToPanel("BridgeTestEffects completed.");
+                break;
             default:
-                result = JSON.stringify({ error: "Unknown command: " + command });
+                logToPanel("Unknown command received: " + command);
+                result = JSON.stringify({ 
+                    status: "error", 
+                    error: "Unknown command: " + command,
+                    availableCommands: [
+                        "getProjectInfo", "listCompositions", "getLayerInfo",
+                        "createComposition", "createTextLayer", "createShapeLayer", "createSolidLayer",
+                        "setLayerProperties", "setLayerKeyframe", "setLayerExpression",
+                        "applyEffect", "applyEffectTemplate", "bridgeTestEffects"
+                    ]
+                });
+                break;
         }
         logToPanel("Execution finished for: " + command); // Log after switch
         
@@ -1107,20 +1309,17 @@ function executeCommand(command, args) {
 // Update command file status
 function updateCommandStatus(status) {
     try {
-        var commandFile = new File(getCommandFilePath());
-        if (commandFile.exists) {
-            commandFile.open("r");
-            var content = commandFile.read();
-            commandFile.close();
+        var commandData = safeReadJSONFile(getCommandFilePath());
+        
+        if (commandData) {
+            commandData.status = status;
             
-            if (content) {
-                var commandData = JSON.parse(content);
-                commandData.status = status;
-                
-                commandFile.open("w");
-                commandFile.write(JSON.stringify(commandData, null, 2));
-                commandFile.close();
-            }
+            var commandFile = new File(getCommandFilePath());
+            commandFile.open("w");
+            commandFile.write(JSON.stringify(commandData, null, 2));
+            commandFile.close();
+        } else {
+            logToPanel("Could not read command file to update status to: " + status);
         }
     } catch (e) {
         logToPanel("Error updating command status: " + e.toString());
@@ -1141,27 +1340,28 @@ function checkForCommands() {
     
     try {
         var commandFile = new File(getCommandFilePath());
-        if (commandFile.exists) {
-            commandFile.open("r");
-            var content = commandFile.read();
-            commandFile.close();
+        if (!commandFile.exists) {
+            isChecking = false;
+            return; // No file to check
+        }
+        
+        // Quick check if file has been modified since we last processed
+        var fileModified = commandFile.modified;
+        if (fileModified && fileModified.getTime() <= lastProcessedTimestamp) {
+            isChecking = false;
+            return; // No new changes to process
+        }
+        
+        var commandData = safeReadJSONFile(getCommandFilePath());
+        
+        if (commandData && commandData.status === "pending") {
+            lastProcessedTimestamp = new Date().getTime(); // Update processed timestamp
             
-            if (content) {
-                try {
-                    var commandData = JSON.parse(content);
-                    
-                    // Only execute pending commands
-                    if (commandData.status === "pending") {
-                        // Update status to running
-                        updateCommandStatus("running");
-                        
-                        // Execute the command
-                        executeCommand(commandData.command, commandData.args || {});
-                    }
-                } catch (parseError) {
-                    logToPanel("Error parsing command file: " + parseError.toString());
-                }
-            }
+            // Update status to running
+            updateCommandStatus("running");
+            
+            // Execute the command
+            executeCommand(commandData.command, commandData.args || {});
         }
     } catch (e) {
         logToPanel("Error checking for commands: " + e.toString());

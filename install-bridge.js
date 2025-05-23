@@ -11,10 +11,7 @@ const __dirname = path.dirname(__filename);
 
 // Possible After Effects installation paths (common locations)
 const possiblePaths = [
-  'C:\\Program Files\\Adobe\\Adobe After Effects 2024',
-  'C:\\Program Files\\Adobe\\Adobe After Effects 2023',
-  'C:\\Program Files\\Adobe\\Adobe After Effects 2022',
-  'C:\\Program Files\\Adobe\\Adobe After Effects 2021'
+  'D:\\Program Files\\Adobe\\Adobe After Effects 2021'
 ];
 
 // Find valid After Effects installation
