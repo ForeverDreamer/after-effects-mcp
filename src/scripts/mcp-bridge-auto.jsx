@@ -744,7 +744,7 @@ function applyEffectTemplate(args) {
             
             // Stylistic effects
             "glow": {
-                effectMatchName: "ADBE Glow",
+                effectMatchName: "ADBE Glo2",
                 settings: {
                     "Glow Threshold": customSettings.threshold || 50,
                     "Glow Radius": customSettings.radius || 15,
@@ -798,7 +798,7 @@ function applyEffectTemplate(args) {
                         }
                     },
                     {
-                        effectMatchName: "ADBE Glow",
+                        effectMatchName: "ADBE Glo2",
                         settings: {
                             "Glow Threshold": 50,
                             "Glow Radius": 10,
