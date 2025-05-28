@@ -1,11 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { MCPError, MCPToolResponse, AllowedScripts } from "../types/index.js";
 
 // ========== 常量定义 ==========
 
 // 使用更兼容的方式获取目录路径
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const SCRIPTS_DIR = path.join(__dirname, "../scripts");
 export const TEMP_DIR = path.join(__dirname, "../temp");
