@@ -62,6 +62,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Test result files
-test-results-*.json
-error-test-results-*.json
-test-report.md 
+comprehensive-test-suite.js
+comprehensive-test-report-*.html
+comprehensive-test-report-*.json

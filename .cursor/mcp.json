@@ -1,0 +1,15 @@
+{
+    "mcpServers": {
+      "sequentialthinking": {
+          "command": "cmd",
+          "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+      },
+      "tavily": {
+        "command": "cmd",
+        "args": ["/c", "npx", "-y", "tavily-mcp@0.1.4"],
+        "env": {
+          "TAVILY_API_KEY": "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"
+        }
+      }
+    } 
+  }

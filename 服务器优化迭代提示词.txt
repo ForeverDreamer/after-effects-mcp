@@ -1,3 +1,5 @@
-1.分析优化完善@mcp-bridge-auto.jsx ，搜狐互联网获取相关资讯，按照最佳实践优化@index.ts 中的Prompts, Resources和Tools，方便LLM更准确地调用mcp工具
+1.分析优化完善@mcp-bridge-auto.jsx ，搜索互联网获取相关资讯，按照最佳实践优化@index.ts 中的Prompts, Resources和Tools，方便LLM更准确地调用mcp工具
 
 2.依次挨个测试一下所有的Prompts, Resources, Tools, 输出测试结果统计，看看是否正常
+
+3.扫描分析@scripts 中的所有脚本，封装复用重复代码，搜索互联网获取相关资讯，按照最佳实践增加和优化完善@index.ts 中的Prompts, Resources和Tools，方便LLM能够更准确地调用mcp工具

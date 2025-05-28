@@ -27,7 +27,7 @@ if (!afterEffectsPath) {
   console.error('Error: Could not find After Effects installation.');
   console.error('Please manually copy the bridge script to your After Effects ScriptUI Panels folder.');
   console.error('Source: build/scripts/mcp-bridge-auto.jsx');
-  console.error('Target: C:\\Program Files\\Adobe\\Adobe After Effects [VERSION]\\Support Files\\Scripts\\ScriptUI Panels\\');
+  console.error('Target: D:\\Program Files\\Adobe\\Adobe After Effects [VERSION]\\Support Files\\Scripts\\ScriptUI Panels\\');
   process.exit(1);
 }
 

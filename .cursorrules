@@ -1,0 +1,15 @@
+## General
+
+- Start all chats with 🤖
+- Respond in Chinese, but keep all code modifications in English
+
+## Node.js Package Management
+
+- Use Yarn as the primary package manager
+- Only use npm if Yarn is not available or causes issues
+
+## Directory Operations
+
+- Before using cd command, always check current path using pwd
+- Verify directory exists before changing to it
+- Use absolute paths when possible to ensure accuracy
