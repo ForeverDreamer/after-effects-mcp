@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+      "target": "es3",
+      "lib": ["es3"],
+      "allowJs": true,
+      "checkJs": false,
+      "noEmit": true,
+      "strict": false,
+      "alwaysStrict": false,
+      "noImplicitAny": false,
+      "noImplicitThis": false,
+      "noImplicitReturns": false
+    },
+    "include": [
+      "**/*.jsx",
+      "**/*.js"
+    ],
+    "exclude": [
+      "node_modules"
+    ],
+    "typeAcquisition": {
+      "enable": false
+    }
+  }

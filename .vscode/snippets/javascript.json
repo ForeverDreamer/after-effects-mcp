@@ -1,0 +1,48 @@
+{
+    "ExtendScript Function": {
+      "prefix": "esxfunc",
+      "body": [
+        "function ${1:functionName}(${2:parameters}) {",
+        "    ${3:// Function body}",
+        "    return ${4:result};",
+        "}"
+      ],
+      "description": "ExtendScript Function"
+    },
+    "ExtendScript Try-Catch": {
+      "prefix": "esxtry",
+      "body": [
+        "try {",
+        "    ${1:// Code that might throw an error}",
+        "} catch (e) {",
+        "    alert('Error: ' + e.toString());",
+        "}"
+      ],
+      "description": "ExtendScript Try-Catch Block"
+    },
+    "After Effects Comp": {
+      "prefix": "aecomp",
+      "body": [
+        "var comp = app.project.activeItem;",
+        "if (comp && comp instanceof CompItem) {",
+        "    ${1:// Work with composition}",
+        "} else {",
+        "    alert('Please select a composition');",
+        "}"
+      ],
+      "description": "After Effects Composition Check"
+    },
+    "File Dialog": {
+      "prefix": "esxfile",
+      "body": [
+        "var file = File.openDialog('${1:Select a file}');",
+        "if (file) {",
+        "    file.open('r');",
+        "    var content = file.read();",
+        "    file.close();",
+        "    ${2:// Process file content}",
+        "}"
+      ],
+      "description": "ExtendScript File Dialog"
+    }
+  }

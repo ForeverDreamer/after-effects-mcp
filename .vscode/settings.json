@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+      "*.jsx": "javascript"
+    },
+    "javascript.suggest.enabled": true,
+    "javascript.validate.enable": true,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": false
+    },
+    "editor.parameterHints.enabled": true,
+    "editor.suggest.localityBonus": true,
+    "editor.wordBasedSuggestions": "matchingDocuments"
+  }
