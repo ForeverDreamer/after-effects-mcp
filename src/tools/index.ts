@@ -38,17 +38,21 @@ export function setupTools(server: McpServer) {
 
 ## 2. Script Installation
 \`\`\`bash
-node install-script.js
+npm run build
+npm run install-bridge
 \`\`\`
 
 ## 3. Launch After Effects
 - Open Adobe After Effects
 - Go to Window > mcp-bridge-auto.jsx
-- Keep the panel open
+- Keep the panel open (this is the main bridge script)
 
 ## 4. Verify Connection
-- Panel auto-checks for commands every few seconds
-- Use \`system-status\` resource to check connection`,
+- Panel auto-checks for commands every 2 seconds
+- Use \`system-status\` resource to check connection
+- All functions are modularized and included in the main script
+
+**Note:** The architecture now uses a single modular script file that includes all functions via #include directives.`,
 
           en: `# 🚀 Setup Guide
 
@@ -59,17 +63,21 @@ node install-script.js
 
 ## 2. Install Scripts
 \`\`\`bash
-node install-script.js
+yarn build
+yarn install-bridge
 \`\`\`
 
 ## 3. Launch After Effects
 - Open Adobe After Effects
 - Go to Window > mcp-bridge-auto.jsx
-- Keep the panel open
+- Keep the panel open (this is the main bridge script)
 
 ## 4. Verify Connection
-- Panel auto-checks for commands every few seconds
-- Use \`system-status\` resource to check connection`
+- Panel auto-checks for commands every 2 seconds
+- Use \`system-status\` resource to check connection
+- All functions are modularized and included in the main script
+
+**Note:** The architecture now uses a single modular script file that includes all functions via #include directives.`
         },
 
         tools: {

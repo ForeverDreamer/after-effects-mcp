@@ -40,12 +40,12 @@ function createShapeLayer(args) {
         shapeLayer.name = name;
         
         // Get the root content property group
-        var contents = shapeLayer.property("Contents"); // Changed from "ADBE Root Vectors Group" for simplicity
+        var contents = shapeLayer.property("Contents");
         
         // Add a shape group (e.g., "Group 1")
         var shapeGroup = contents.addProperty("ADBE Vector Group");
         // Get the Contents property group WITHIN the new shape group
-        var groupContents = shapeGroup.property("Contents"); 
+        var groupContents = shapeGroup.property("Contents");
         
         // Add the appropriate shape path based on type TO THE GROUP'S CONTENTS
         var shapePathProperty;
@@ -57,12 +57,11 @@ function createShapeLayer(args) {
             shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Ellipse");
             var ellipseSizeProp = shapePathProperty.property("Size");
             ellipseSizeProp.setValue(size);
-        } else if (shapeType === "polygon" || shapeType === "star") { // Combine polygon/star logic
+        } else if (shapeType === "polygon" || shapeType === "star") {
             shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Star");
-            shapePathProperty.property("Type").setValue(shapeType === "polygon" ? 1 : 2); // 1=Polygon, 2=Star
+            shapePathProperty.property("Type").setValue(shapeType === "polygon" ? 1 : 2);
             shapePathProperty.property("Points").setValue(points);
             shapePathProperty.property("Outer Radius").setValue(size[0] / 2);
-            // For stars, set inner radius; for polygons, maybe outer roundness if needed
             if (shapeType === "star") {
                 shapePathProperty.property("Inner Radius").setValue(size[0] / 3);
             }
@@ -81,13 +80,6 @@ function createShapeLayer(args) {
             stroke.property("Opacity").setValue(100);
         }
         
-        // Add transform properties TO THE GROUP (not the layer's main transform initially)
-        var groupTransform = shapeGroup.property("Transform");
-        // Note: Position is relative to the layer anchor point, 
-        // Layer position sets the anchor point relative to the comp.
-        // Setting group position might be more intuitive for simple shapes.
-        // groupTransform.property("Position").setValue([0,0]); // Keep group centered initially
-
         // Set layer's main transform properties
         shapeLayer.property("Position").setValue(position);
         
@@ -118,30 +110,4 @@ function createShapeLayer(args) {
             message: error.toString()
         }, null, 2);
     }
-}
-
-// Read arguments from the file (passed by the Node.js script)
-var argsFile = new File($.fileName.replace(/[^\\\/]*$/, '') + "../temp/args.json");
-var args = {};
-if (argsFile.exists) {
-    argsFile.open("r");
-    var content = argsFile.read();
-    argsFile.close();
-    if (content) {
-        try {
-            args = JSON.parse(content);
-        } catch (e) {
-            // Handle parsing error
-            $.write(JSON.stringify({
-                status: "error",
-                message: "Failed to parse arguments: " + e.toString()
-            }, null, 2));
-        }
-    }
-}
-
-// Run the function and write the result
-var result = createShapeLayer(args);
-
-// Write the result so it can be captured by the Node.js process
-$.write(result);
+} 

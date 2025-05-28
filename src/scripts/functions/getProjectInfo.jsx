@@ -1,5 +1,5 @@
 // getProjectInfo.jsx
-// Get information about the current After Effects project
+// Gets comprehensive information about the current project
 
 function getProjectInfo() {
     var project = app.project;
@@ -9,13 +9,11 @@ function getProjectInfo() {
         numItems: project.numItems,
         bitsPerChannel: project.bitsPerChannel,
         frameRate: project.frameRate,
-        dimensions: project.displaySize,
+        dimensions: [project.width, project.height],
         duration: project.duration,
-        timeMode: project.timeDisplayType === TimeDisplayType.FRAMES ? "Frames" : "Timecode",
         items: []
     };
 
-    // Count item types
     var countByType = {
         compositions: 0,
         footage: 0,
@@ -23,8 +21,7 @@ function getProjectInfo() {
         solids: 0
     };
 
-    // Get item information
-    for (var i = 1; i <= project.numItems; i++) {
+    for (var i = 1; i <= Math.min(project.numItems, 50); i++) {
         var item = project.item(i);
         var itemType = "";
         
@@ -54,26 +51,4 @@ function getProjectInfo() {
     result.itemCounts = countByType;
     
     return JSON.stringify(result, null, 2);
-}
-
-// Read arguments from the file (passed by the Node.js script)
-var argsFile = new File($.fileName.replace(/[^\\\/]*$/, '') + "../temp/args.json");
-var args = {};
-if (argsFile.exists) {
-    argsFile.open("r");
-    var content = argsFile.read();
-    argsFile.close();
-    if (content) {
-        try {
-            args = JSON.parse(content);
-        } catch (e) {
-            // Handle parsing error
-        }
-    }
-}
-
-// Run the function and write the result
-var result = getProjectInfo();
-
-// Write the result so it can be captured by the Node.js process
-$.write(result);
+} 

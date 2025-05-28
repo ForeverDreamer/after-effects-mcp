@@ -205,18 +205,4 @@ function applyEffectTemplate(args) {
             message: error.toString()
         }, null, 2);
     }
-}
-
-// Get arguments passed from Node.js process
-var args;
-try {
-    args = JSON.parse($.getenv("args"));
-} catch (e) {
-    args = {};
-}
-
-// Run the function and write the result
-var result = applyEffectTemplate(args);
-
-// Write the result so it can be captured by the Node.js process
-$.write(result); 
+} 

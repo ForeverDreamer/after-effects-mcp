@@ -42,30 +42,4 @@ function createComposition(args) {
             message: error.toString()
         }, null, 2);
     }
-}
-
-// Read arguments from the file (passed by the Node.js script)
-var argsFile = new File($.fileName.replace(/[^\\\/]*$/, '') + "../temp/args.json");
-var args = {};
-if (argsFile.exists) {
-    argsFile.open("r");
-    var content = argsFile.read();
-    argsFile.close();
-    if (content) {
-        try {
-            args = JSON.parse(content);
-        } catch (e) {
-            // Handle parsing error
-            $.write(JSON.stringify({
-                status: "error",
-                message: "Failed to parse arguments: " + e.toString()
-            }, null, 2));
-        }
-    }
-}
-
-// Run the function and write the result
-var result = createComposition(args);
-
-// Write the result so it can be captured by the Node.js process
-$.write(result); 
+} 
