@@ -1,28 +1,113 @@
 // applyEffectTemplate.jsx
 // Applies predefined effect templates to layers
 
+//@include "utils.jsx"
+
+// ========== 参数验证Schema ==========
+var APPLY_EFFECT_TEMPLATE_SCHEMA = {
+    name: "applyEffectTemplate",
+    description: "为图层应用预定义的特效模板",
+    category: "effects",
+    required: ["templateName"],
+    properties: {
+        compName: {
+            type: "string",
+            description: "合成名称（空字符串使用活动合成）",
+            example: "Main Comp",
+            default: ""
+        },
+        layerIndex: {
+            type: "integer",
+            description: "图层索引（1开始）",
+            example: 1,
+            default: 1,
+            min: 1,
+            max: 1000
+        },
+        templateName: {
+            type: "string",
+            description: "特效模板名称",
+            example: "gaussian-blur",
+            enum: [
+                "gaussian-blur", "directional-blur", "color-balance", 
+                "brightness-contrast", "curves", "glow", "drop-shadow",
+                "cinematic-look", "text-pop"
+            ]
+        },
+        customSettings: {
+            type: "object",
+            description: "自定义设置（覆盖模板默认值）",
+            example: { "blurriness": 15, "opacity": 80 }
+        }
+    },
+    examples: [
+        {
+            name: "应用高斯模糊模板",
+            args: {
+                compName: "Main Comp",
+                layerIndex: 1,
+                templateName: "gaussian-blur",
+                customSettings: {
+                    "blurriness": 25
+                }
+            }
+        },
+        {
+            name: "应用投影模板",
+            args: {
+                compName: "Effects Comp",
+                layerIndex: 2,
+                templateName: "drop-shadow",
+                customSettings: {
+                    "opacity": 60,
+                    "distance": 15
+                }
+            }
+        },
+        {
+            name: "应用电影风格模板",
+            args: {
+                compName: "Cinematic Comp",
+                layerIndex: 1,
+                templateName: "cinematic-look"
+            }
+        }
+    ]
+};
+
 function applyEffectTemplate(args) {
     try {
-        // Extract parameters
-        var compIndex = args.compIndex || 1; // Default to first comp
-        var layerIndex = args.layerIndex || 1; // Default to first layer
-        var templateName = args.templateName; // Name of the template to apply
-        var customSettings = args.customSettings || {}; // Optional customizations
-        
-        if (!templateName) {
-            throw new Error("You must specify a templateName");
+        // 参数验证
+        var validation = validateParameters(args, APPLY_EFFECT_TEMPLATE_SCHEMA);
+        if (!validation.isValid) {
+            return JSON.stringify({
+                status: "error",
+                message: "Parameter validation failed",
+                errors: validation.errors,
+                schema: APPLY_EFFECT_TEMPLATE_SCHEMA
+            }, null, 2);
         }
         
-        // Find the composition by index
-        var comp = app.project.item(compIndex);
-        if (!comp || !(comp instanceof CompItem)) {
-            throw new Error("Composition not found at index " + compIndex);
+        // 使用验证后的参数
+        var params = validation.normalizedArgs;
+        
+        // Find the composition using utility function
+        var compResult = getCompositionByName(params.compName);
+        if (compResult.error) {
+            return JSON.stringify({
+                status: "error",
+                message: compResult.error
+            }, null, 2);
         }
+        var comp = compResult.composition;
         
         // Find the layer by index
-        var layer = comp.layer(layerIndex);
+        var layer = comp.layer(params.layerIndex);
         if (!layer) {
-            throw new Error("Layer not found at index " + layerIndex + " in composition '" + comp.name + "'");
+            return JSON.stringify({
+                status: "error",
+                message: "Layer not found at index " + params.layerIndex + " in composition '" + comp.name + "'"
+            }, null, 2);
         }
         
         // Template definitions
@@ -31,14 +116,14 @@ function applyEffectTemplate(args) {
             "gaussian-blur": {
                 effectMatchName: "ADBE Gaussian Blur 2",
                 settings: {
-                    "Blurriness": customSettings.blurriness || 20
+                    "Blurriness": params.customSettings && params.customSettings.blurriness || 20
                 }
             },
             "directional-blur": {
                 effectMatchName: "ADBE Motion Blur",
                 settings: {
-                    "Direction": customSettings.direction || 0,
-                    "Blur Length": customSettings.length || 10
+                    "Direction": params.customSettings && params.customSettings.direction || 0,
+                    "Blur Length": params.customSettings && params.customSettings.length || 10
                 }
             },
             
@@ -46,41 +131,41 @@ function applyEffectTemplate(args) {
             "color-balance": {
                 effectMatchName: "ADBE Color Balance (HLS)",
                 settings: {
-                    "Hue": customSettings.hue || 0,
-                    "Lightness": customSettings.lightness || 0,
-                    "Saturation": customSettings.saturation || 0
+                    "Hue": params.customSettings && params.customSettings.hue || 0,
+                    "Lightness": params.customSettings && params.customSettings.lightness || 0,
+                    "Saturation": params.customSettings && params.customSettings.saturation || 0
                 }
             },
             "brightness-contrast": {
                 effectMatchName: "ADBE Brightness & Contrast 2",
                 settings: {
-                    "Brightness": customSettings.brightness || 0,
-                    "Contrast": customSettings.contrast || 0,
+                    "Brightness": params.customSettings && params.customSettings.brightness || 0,
+                    "Contrast": params.customSettings && params.customSettings.contrast || 0,
                     "Use Legacy": false
                 }
             },
             "curves": {
-                effectMatchName: "ADBE CurvesCustom",
+                effectMatchName: "ADBE CurvesCustom"
                 // Curves are complex and would need special handling
             },
             
             // Stylistic effects
             "glow": {
-                effectMatchName: "ADBE Glow",
+                effectMatchName: "ADBE Glo2",
                 settings: {
-                    "Glow Threshold": customSettings.threshold || 50,
-                    "Glow Radius": customSettings.radius || 15,
-                    "Glow Intensity": customSettings.intensity || 1
+                    "Glow Threshold": params.customSettings && params.customSettings.threshold || 50,
+                    "Glow Radius": params.customSettings && params.customSettings.radius || 15,
+                    "Glow Intensity": params.customSettings && params.customSettings.intensity || 1
                 }
             },
             "drop-shadow": {
                 effectMatchName: "ADBE Drop Shadow",
                 settings: {
-                    "Shadow Color": customSettings.color || [0, 0, 0, 1],
-                    "Opacity": customSettings.opacity || 50,
-                    "Direction": customSettings.direction || 135,
-                    "Distance": customSettings.distance || 10,
-                    "Softness": customSettings.softness || 10
+                    "Shadow Color": params.customSettings && params.customSettings.color || [0, 0, 0, 1],
+                    "Opacity": params.customSettings && params.customSettings.opacity || 50,
+                    "Direction": params.customSettings && params.customSettings.direction || 135,
+                    "Distance": params.customSettings && params.customSettings.distance || 10,
+                    "Softness": params.customSettings && params.customSettings.softness || 10
                 }
             },
             
@@ -120,7 +205,7 @@ function applyEffectTemplate(args) {
                         }
                     },
                     {
-                        effectMatchName: "ADBE Glow",
+                        effectMatchName: "ADBE Glo2",
                         settings: {
                             "Glow Threshold": 50,
                             "Glow Radius": 10,
@@ -132,10 +217,13 @@ function applyEffectTemplate(args) {
         };
         
         // Check if the requested template exists
-        var template = templates[templateName];
+        var template = templates[params.templateName];
         if (!template) {
             var availableTemplates = Object.keys(templates).join(", ");
-            throw new Error("Template '" + templateName + "' not found. Available templates: " + availableTemplates);
+            return JSON.stringify({
+                status: "error",
+                message: "Template '" + params.templateName + "' not found. Available templates: " + availableTemplates
+            }, null, 2);
         }
         
         var appliedEffects = [];
@@ -188,15 +276,14 @@ function applyEffectTemplate(args) {
         
         return JSON.stringify({
             status: "success",
-            message: "Effect template '" + templateName + "' applied successfully",
+            message: "Effect template '" + params.templateName + "' applied successfully",
             appliedEffects: appliedEffects,
             layer: {
                 name: layer.name,
-                index: layerIndex
+                index: params.layerIndex
             },
             composition: {
-                name: comp.name,
-                index: compIndex
+                name: comp.name
             }
         }, null, 2);
     } catch (error) {

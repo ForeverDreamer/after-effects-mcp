@@ -1,0 +1,71 @@
+{
+    "projectName": "API生态系统统一管理_MCP动画",
+    "version": "1.0",
+    "workspaceSetup": {
+      "rootFolder": "API_MCP_Animation_Project",
+      "subFolders": {
+        "01_Scripts": "MCP脚本和表达式代码",
+        "02_Assets": {
+          "Raw_Materials": "原始素材文件",
+          "Icons_Logos": "图标和标识素材", 
+          "Fonts": "字体文件",
+          "Audio": "音频素材"
+        },
+        "03_AE_Projects": {
+          "Main_Project": "主项目文件",
+          "Sub_Comps": "子合成文件",
+          "Templates": "模板和预设"
+        },
+        "04_Renders": {
+          "Preview": "预览版本渲染",
+          "Final": "最终版本渲染",
+          "Platform_Versions": "各平台适配版本"
+        },
+        "05_Backups": "项目备份文件",
+        "06_Documentation": "制作文档和说明"
+      },
+      "namingConvention": {
+        "compositions": "MCP_[场景名]_v[版本号]",
+        "layers": "[类型]_[描述]_[序号]",
+        "assets": "[日期]_[类型]_[描述]",
+        "renders": "[项目名]_[版本]_[平台]_[日期]"
+      },
+      "versionControl": {
+        "strategy": "incremental_backup",
+        "frequency": "hourly_auto_save",
+        "cloudSync": "enabled",
+        "maxVersions": 10
+      }
+    },
+    "technicalSpecs": {
+      "mainComposition": {
+        "name": "API_MCP_Main_v1.0",
+        "width": 1920,
+        "height": 1080,
+        "duration": 180,
+        "frameRate": 30,
+        "colorSpace": "Rec.709",
+        "backgroundColor": {"r": 8, "g": 12, "b": 20}
+      },
+      "subCompositions": [
+        "API现状展示_45s",
+        "问题痛点分析_29s", 
+        "MCP解决方案_44s",
+        "效果对比_29s",
+        "价值展望_33s"
+      ]
+    },
+    "mcpIntegration": {
+      "bridgeSettings": {
+        "autoConnect": true,
+        "connectionTimeout": 30,
+        "retryAttempts": 3,
+        "debugMode": false
+      },
+      "batchProcessing": {
+        "enabled": true,
+        "maxConcurrentJobs": 4,
+        "queueManagement": "priority_based"
+      }
+    }
+  }

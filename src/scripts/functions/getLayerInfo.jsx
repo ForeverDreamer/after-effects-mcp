@@ -1,32 +1,222 @@
 // getLayerInfo.jsx
-// Gets information about layers in the active composition
+// Gets information about layers in the specified composition
 
-function getLayerInfo() {
-    var project = app.project;
-    var result = {
-        layers: []
-    };
-    
-    var activeComp = null;
-    if (app.project.activeItem instanceof CompItem) {
-        activeComp = app.project.activeItem;
-    } else {
-        return JSON.stringify({ error: "No active composition" }, null, 2);
-    }
-    
-    for (var i = 1; i <= activeComp.numLayers; i++) {
-        var layer = activeComp.layer(i);
-        var layerInfo = {
-            index: layer.index,
-            name: layer.name,
-            enabled: layer.enabled,
-            locked: layer.locked,
-            inPoint: layer.inPoint,
-            outPoint: layer.outPoint
+//@include "utils.jsx"
+
+// ========== 参数验证Schema ==========
+var GET_LAYER_INFO_SCHEMA = {
+    name: "getLayerInfo",
+    description: "获取指定合成中的图层信息",
+    category: "project",
+    required: [],
+    properties: {
+        compName: {
+            type: "string",
+            description: "合成名称（空字符串使用活动合成）",
+            example: "Main Comp",
+            default: ""
+        },
+        includeDetails: {
+            type: "boolean",
+            description: "是否包含详细图层属性",
+            example: true,
+            default: true
+        },
+        includeTransform: {
+            type: "boolean",
+            description: "是否包含变换属性信息",
+            example: true,
+            default: false
+        },
+        layerTypes: {
+            type: "array",
+            description: "筛选特定类型的图层（空数组返回所有类型）",
+            example: ["text", "shape", "solid"],
+            default: []
+        }
+    },
+    examples: [
+        {
+            name: "获取活动合成图层基本信息",
+            args: {
+                compName: "",
+                includeDetails: false
+            }
+        },
+        {
+            name: "获取指定合成详细图层信息",
+            args: {
+                compName: "Main Comp",
+                includeDetails: true,
+                includeTransform: true
+            }
+        },
+        {
+            name: "筛选文本图层",
+            args: {
+                compName: "Text Comp",
+                layerTypes: ["text"]
+            }
+        }
+    ]
+};
+
+function getLayerInfo(args) {
+    try {
+        // 参数验证
+        args = args || {};
+        var validation = validateParameters(args, GET_LAYER_INFO_SCHEMA);
+        if (!validation.isValid) {
+            return JSON.stringify({
+                status: "error",
+                message: "Parameter validation failed",
+                errors: validation.errors,
+                schema: GET_LAYER_INFO_SCHEMA
+            }, null, 2);
+        }
+        
+        // 使用验证后的参数
+        var params = validation.normalizedArgs;
+        
+        // Find the composition using utility function
+        var compResult = getCompositionByName(params.compName);
+        if (compResult.error) {
+            return JSON.stringify({
+                status: "error",
+                message: compResult.error
+            }, null, 2);
+        }
+        var comp = compResult.composition;
+        
+        var result = {
+            status: "success",
+            composition: {
+                name: comp.name,
+                width: comp.width,
+                height: comp.height,
+                duration: comp.duration,
+                frameRate: comp.frameRate,
+                numLayers: comp.numLayers
+            },
+            layers: []
         };
         
-        result.layers.push(layerInfo);
+        // Helper function to get layer type
+        function getLayerType(layer) {
+            if (layer instanceof TextLayer) return "text";
+            if (layer instanceof ShapeLayer) return "shape";
+            if (layer instanceof CameraLayer) return "camera";
+            if (layer instanceof LightLayer) return "light";
+            if (layer instanceof AVLayer) {
+                if (layer.source instanceof SolidSource) return "solid";
+                if (layer.adjustmentLayer) return "adjustment";
+                return "footage";
+            }
+            return "unknown";
+        }
+        
+        for (var i = 1; i <= comp.numLayers; i++) {
+            var layer = comp.layer(i);
+            var layerType = getLayerType(layer);
+            
+            // Filter by layer types if specified
+            if (params.layerTypes.length > 0 && params.layerTypes.indexOf(layerType) === -1) {
+                continue;
+            }
+            
+            var layerInfo = {
+                index: layer.index,
+                name: layer.name,
+                type: layerType,
+                enabled: layer.enabled,
+                locked: layer.locked,
+                solo: layer.solo,
+                shy: layer.shy,
+                inPoint: layer.inPoint,
+                outPoint: layer.outPoint,
+                startTime: layer.startTime
+            };
+            
+            // Add detailed information if requested
+            if (params.includeDetails) {
+                layerInfo.details = {
+                    hasVideo: layer.hasVideo,
+                    hasAudio: layer.hasAudio,
+                    active: layer.active,
+                    selected: layer.selected,
+                    motionBlur: layer.motionBlur,
+                    threeDLayer: layer.threeDLayer,
+                    effectsActive: layer.effectsActive,
+                    quality: layer.quality,
+                    samplingQuality: layer.samplingQuality
+                };
+                
+                // Add source information for footage layers
+                if (layer instanceof AVLayer && layer.source) {
+                    layerInfo.details.source = {
+                        name: layer.source.name,
+                        width: layer.source.width || 0,
+                        height: layer.source.height || 0,
+                        duration: layer.source.duration || 0
+                    };
+                }
+                
+                // Add text-specific information
+                if (layer instanceof TextLayer) {
+                    try {
+                        var textDoc = layer.property("Source Text").value;
+                        layerInfo.details.text = {
+                            content: textDoc.text,
+                            fontSize: textDoc.fontSize,
+                            font: textDoc.font
+                        };
+                    } catch (e) {
+                        // Text properties might not be accessible
+                        layerInfo.details.text = { content: "Unable to read text properties" };
+                    }
+                }
+                
+                // Add effects information
+                var effects = layer.property("Effects");
+                if (effects && effects.numProperties > 0) {
+                    layerInfo.details.effects = [];
+                    for (var j = 1; j <= effects.numProperties; j++) {
+                        var effect = effects.property(j);
+                        layerInfo.details.effects.push({
+                            name: effect.name,
+                            matchName: effect.matchName,
+                            enabled: effect.enabled
+                        });
+                    }
+                }
+            }
+            
+            // Add transform properties if requested
+            if (params.includeTransform) {
+                try {
+                    var transform = layer.property("Transform");
+                    layerInfo.transform = {
+                        position: transform.property("Position").value,
+                        scale: transform.property("Scale").value,
+                        rotation: layer.threeDLayer ? 
+                            transform.property("Z Rotation").value : 
+                            transform.property("Rotation").value,
+                        opacity: transform.property("Opacity").value,
+                        anchorPoint: transform.property("Anchor Point").value
+                    };
+                } catch (e) {
+                    layerInfo.transform = { error: "Unable to read transform properties" };
+                }
+            }
+            
+            result.layers.push(layerInfo);
+        }
+        
+        return JSON.stringify(result, null, 2);
+    } catch (error) {
+        return JSON.stringify({
+            status: "error",
+            message: error.toString()
+        }, null, 2);
     }
-    
-    return JSON.stringify(result, null, 2);
 } 

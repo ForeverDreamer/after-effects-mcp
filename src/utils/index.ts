@@ -334,6 +334,12 @@ export const allowedScripts: AllowedScripts = {
     category: "effects",
     estimatedTime: "Medium"
   },
+  "batchApplyEffects": { 
+    description: "Batch apply effects to multiple layers", 
+    category: "effects",
+    requiredParams: ["compIndex", "layerIndices"],
+    estimatedTime: "Long"
+  },
   
   // Testing and debugging
   "test-animation": { 

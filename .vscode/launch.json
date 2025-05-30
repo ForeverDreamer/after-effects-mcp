@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",  // 配置文件的版本号，指示使用的调试器版本
+    "configurations": [  // 配置数组，包含多个调试配置
+        {
+            "type": "extendscript-debug",
+            "request": "launch",
+            "name": "Debug After Effects",
+            "script": "${file}",
+            "hostAppSpecifier": "aftereffects-18.0",
+            "engineName": "main",
+            "debugLevel": 1,
+            "showConsole": true,
+            "showScripts": false,
+            "showVariables": true,
+            "showWatch": true,
+            "showCallStack": true,
+            "showBreakpoints": true,
+            "stopOnEntry": false,
+            "enableSourceMaps": true,
+            "trace": false
+        },
+    ]
+  }

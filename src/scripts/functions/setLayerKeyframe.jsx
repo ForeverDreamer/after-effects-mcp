@@ -1,22 +1,105 @@
-/**
- * Sets a keyframe for a specific property on a layer.
- * @param {number} compIndex - The index of the composition (1-based for user input, converted to 0-based for ExtendScript)
- * @param {number} layerIndex - The index of the layer (1-based for user input, converted to 0-based for ExtendScript)
- * @param {string} propertyName - The name of the property to set keyframe for
- * @param {number} timeInSeconds - The time in seconds where to set the keyframe
- * @param {*} value - The value to set at the keyframe
- * @returns {string} JSON string with operation result
- */
-function setLayerKeyframe(compIndex, layerIndex, propertyName, timeInSeconds, value) {
-    try {
-        // Adjust indices to be 0-based for ExtendScript arrays
-        var comp = app.project.items[compIndex];
-        if (!comp || !(comp instanceof CompItem)) {
-            return JSON.stringify({ success: false, message: "Composition not found at index " + compIndex });
+//@include "utils.jsx"
+
+// ========== 参数验证Schema ==========
+var SET_LAYER_KEYFRAME_SCHEMA = {
+    name: "setLayerKeyframe",
+    description: "为图层的特定属性设置关键帧",
+    category: "animation",
+    required: ["compName", "layerIndex", "propertyName", "timeInSeconds", "value"],
+    properties: {
+        compName: {
+            type: "string",
+            description: "合成名称（空字符串使用活动合成）",
+            example: "Main Comp",
+            default: ""
+        },
+        layerIndex: {
+            type: "integer",
+            description: "图层索引（1开始）",
+            example: 1,
+            min: 1,
+            max: 1000
+        },
+        propertyName: {
+            type: "string",
+            description: "属性名称",
+            example: "Opacity",
+            enum: ["Position", "Scale", "Rotation", "Opacity", "Anchor Point"]
+        },
+        timeInSeconds: {
+            type: "number",
+            description: "关键帧时间（秒）",
+            example: 1.0,
+            min: 0.0,
+            max: 3600.0
+        },
+        value: {
+            type: "number",
+            description: "属性值（根据属性类型可能是数字或数组）",
+            example: 50
         }
-        var layer = comp.layers[layerIndex];
+    },
+    examples: [
+        {
+            name: "设置透明度关键帧",
+            args: {
+                compName: "Main Comp",
+                layerIndex: 1,
+                propertyName: "Opacity",
+                timeInSeconds: 1.0,
+                value: 50
+            }
+        },
+        {
+            name: "设置位置关键帧",
+            args: {
+                compName: "Animation Comp",
+                layerIndex: 2,
+                propertyName: "Position",
+                timeInSeconds: 2.5,
+                value: [960, 540]
+            }
+        }
+    ]
+};
+
+function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, value) {
+    try {
+        // 构建参数对象进行验证
+        var args = {
+            compName: compName,
+            layerIndex: layerIndex,
+            propertyName: propertyName,
+            timeInSeconds: timeInSeconds,
+            value: value
+        };
+        
+        // 参数验证
+        var validation = validateParameters(args, SET_LAYER_KEYFRAME_SCHEMA);
+        if (!validation.isValid) {
+            return JSON.stringify({
+                success: false,
+                message: "Parameter validation failed",
+                errors: validation.errors,
+                schema: SET_LAYER_KEYFRAME_SCHEMA
+            }, null, 2);
+        }
+        
+        // 使用验证后的参数
+        var params = validation.normalizedArgs;
+        
+        // Find the composition using utility function
+        var compResult = getCompositionByName(params.compName);
+        if (compResult.error) {
+            return JSON.stringify({ success: false, message: compResult.error });
+        }
+        var comp = compResult.composition;
+        if (!comp || !(comp instanceof CompItem)) {
+            return JSON.stringify({ success: false, message: "Composition not found" });
+        }
+        var layer = comp.layers[params.layerIndex];
         if (!layer) {
-            return JSON.stringify({ success: false, message: "Layer not found at index " + layerIndex + " in composition '" + comp.name + "'"});
+            return JSON.stringify({ success: false, message: "Layer not found at index " + params.layerIndex + " in composition '" + comp.name + "'"});
         }
 
         var transformGroup = layer.property("Transform");
@@ -24,38 +107,38 @@ function setLayerKeyframe(compIndex, layerIndex, propertyName, timeInSeconds, va
              return JSON.stringify({ success: false, message: "Transform properties not found for layer '" + layer.name + "' (type: " + layer.matchName + ")." });
         }
 
-        var property = transformGroup.property(propertyName);
+        var property = transformGroup.property(params.propertyName);
         if (!property) {
-             if (layer.property("Effects") && layer.property("Effects").property(propertyName)) {
-                 property = layer.property("Effects").property(propertyName);
-             } else if (layer.property("Text") && layer.property("Text").property(propertyName)) {
-                 property = layer.property("Text").property(propertyName);
+             if (layer.property("Effects") && layer.property("Effects").property(params.propertyName)) {
+                 property = layer.property("Effects").property(params.propertyName);
+             } else if (layer.property("Text") && layer.property("Text").property(params.propertyName)) {
+                 property = layer.property("Text").property(params.propertyName);
             }
 
             if (!property) {
-                 return JSON.stringify({ success: false, message: "Property '" + propertyName + "' not found on layer '" + layer.name + "'." });
+                 return JSON.stringify({ success: false, message: "Property '" + params.propertyName + "' not found on layer '" + layer.name + "'." });
             }
         }
 
         if (!property.canVaryOverTime) {
-             return JSON.stringify({ success: false, message: "Property '" + propertyName + "' cannot be keyframed." });
+             return JSON.stringify({ success: false, message: "Property '" + params.propertyName + "' cannot be keyframed." });
         }
 
         if (property.numKeys === 0 && !property.isTimeVarying) {
              property.setValueAtTime(comp.time, property.value);
         }
 
-        property.setValueAtTime(timeInSeconds, value);
+        property.setValueAtTime(params.timeInSeconds, params.value);
 
         return JSON.stringify({ 
             success: true, 
-            message: "Keyframe set for '" + propertyName + "' on layer '" + layer.name + "' at " + timeInSeconds + "s.",
+            message: "Keyframe set for '" + params.propertyName + "' on layer '" + layer.name + "' at " + params.timeInSeconds + "s.",
             details: {
                 compName: comp.name,
                 layerName: layer.name,
-                propertyName: propertyName,
-                timeInSeconds: timeInSeconds,
-                value: value
+                propertyName: params.propertyName,
+                timeInSeconds: params.timeInSeconds,
+                value: params.value
             }
         });
     } catch (e) {

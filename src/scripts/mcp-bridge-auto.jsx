@@ -92,18 +92,19 @@ if (!Date.prototype.toISOString) {
 }
 
 // Include modular function definitions
-#include "functions/createComposition.jsx"
-#include "functions/createTextLayer.jsx"
-#include "functions/createShapeLayer.jsx"
-#include "functions/createSolidLayer.jsx"
-#include "functions/setLayerProperties.jsx"
-#include "functions/setLayerKeyframe.jsx"
-#include "functions/setLayerExpression.jsx"
-#include "functions/applyEffect.jsx"
-#include "functions/applyEffectTemplate.jsx"
-#include "functions/getProjectInfo.jsx"
-#include "functions/listCompositions.jsx"
-#include "functions/getLayerInfo.jsx"
+//@include "functions/createComposition.jsx"
+//@include "functions/createTextLayer.jsx"
+//@include "functions/createShapeLayer.jsx"
+//@include "functions/createSolidLayer.jsx"
+//@include "functions/setLayerProperties.jsx"
+//@include "functions/setLayerKeyframe.jsx"
+//@include "functions/setLayerExpression.jsx"
+//@include "functions/applyEffect.jsx"
+//@include "functions/batchApplyEffects.jsx"
+//@include "functions/applyEffectTemplate.jsx"
+//@include "functions/getProjectInfo.jsx"
+//@include "functions/listCompositions.jsx"
+//@include "functions/getLayerInfo.jsx"
 
 // --- Additional Functions ---
 
@@ -275,18 +276,23 @@ function executeCommand(command, args) {
                 break;
             case "setLayerKeyframe":
                 logToPanel("Calling setLayerKeyframe function...");
-                result = setLayerKeyframe(args.compIndex, args.layerIndex, args.propertyName, args.timeInSeconds, args.value);
+                result = setLayerKeyframe(args.compName, args.layerIndex, args.propertyName, args.timeInSeconds, args.value);
                 logToPanel("Returned from setLayerKeyframe.");
                 break;
             case "setLayerExpression":
                 logToPanel("Calling setLayerExpression function...");
-                result = setLayerExpression(args.compIndex, args.layerIndex, args.propertyName, args.expressionString);
+                result = setLayerExpression(args.compName, args.layerIndex, args.propertyName, args.expressionString);
                 logToPanel("Returned from setLayerExpression.");
                 break;
             case "applyEffect":
                 logToPanel("Calling applyEffect function...");
                 result = applyEffect(args);
                 logToPanel("Returned from applyEffect.");
+                break;
+            case "batchApplyEffects":
+                logToPanel("Calling batchApplyEffects function...");
+                result = batchApplyEffects(args);
+                logToPanel("Returned from batchApplyEffects.");
                 break;
             case "applyEffectTemplate":
                 logToPanel("Calling applyEffectTemplate function...");
@@ -311,7 +317,7 @@ function executeCommand(command, args) {
                         "getProjectInfo", "listCompositions", "getLayerInfo",
                         "createComposition", "createTextLayer", "createShapeLayer", "createSolidLayer",
                         "setLayerProperties", "setLayerKeyframe", "setLayerExpression",
-                        "applyEffect", "applyEffectTemplate", "bridgeTestEffects"
+                        "applyEffect", "batchApplyEffects", "applyEffectTemplate", "bridgeTestEffects"
                     ]
                 });
                 break;

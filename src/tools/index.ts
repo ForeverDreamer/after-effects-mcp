@@ -4,18 +4,11 @@ import {
   MCPToolResponse,
   helpToolSchema,
   runScriptSchema,
-  getResultsSchema,
-  createCompositionSchema,
-  setLayerKeyframeSchema,
-  setLayerExpressionSchema,
-  batchApplyEffectsSchema,
-  applyEffectSchema,
-  applyEffectTemplateSchema
+  getResultsSchema
 } from "../types/index.js";
 import {
   AECommandManager,
   ResponseFormatter,
-  ParameterValidator,
   allowedScripts,
   delay
 } from "../utils/index.js";
@@ -26,35 +19,9 @@ export function setupTools(server: McpServer) {
     "get-help",
     "Get comprehensive help and usage guide for After Effects MCP integration",
     helpToolSchema.shape,
-    async ({ topic = "all", language = "zh" }): Promise<MCPToolResponse> => {
+    async ({ topic = "all" }): Promise<MCPToolResponse> => {
       const helpSections = {
-        setup: {
-          zh: `# 🚀 Installation Setup Guide
-
-## 1. Environment Preparation
-- Ensure Adobe After Effects 2021 or later is installed
-- Install Node.js (recommended v18 or later)
-- Administrator privileges for script installation
-
-## 2. Script Installation
-\`\`\`bash
-npm run build
-npm run install-bridge
-\`\`\`
-
-## 3. Launch After Effects
-- Open Adobe After Effects
-- Go to Window > mcp-bridge-auto.jsx
-- Keep the panel open (this is the main bridge script)
-
-## 4. Verify Connection
-- Panel auto-checks for commands every 2 seconds
-- Use \`system-status\` resource to check connection
-- All functions are modularized and included in the main script
-
-**Note:** The architecture now uses a single modular script file that includes all functions via #include directives.`,
-
-          en: `# 🚀 Setup Guide
+        setup: `# 🚀 Setup Guide
 
 ## 1. Prerequisites
 - Adobe After Effects 2021 or later
@@ -77,61 +44,254 @@ yarn install-bridge
 - Use \`system-status\` resource to check connection
 - All functions are modularized and included in the main script
 
-**Note:** The architecture now uses a single modular script file that includes all functions via #include directives.`
-        },
+**Note:** The architecture now uses a single modular script file that includes all functions via #include directives.`,
 
-        tools: {
-          zh: `# 🛠️ Available Tools
+        tools: `# 🛠️ Tools Usage Guide
 
-## 📋 Project Management
-- \`run-script\`: Execute predefined scripts
-- \`get-results\`: Get last execution results
-- \`create-composition\`: Create new compositions
+## 🎯 Core Architecture
+After Effects MCP uses a simplified three-tool architecture:
 
-## 🎨 Layer Management
-- \`create-text-layer\`: Create text layers
-- \`create-shape-layer\`: Create shape layers
-- \`create-solid-layer\`: Create solid layers
-- \`set-layer-properties\`: Modify layer properties
+### 📋 Core Tools
+- \`get-help\`: Get help and documentation
+- \`run-script\`: Unified script execution entry point - **Main tool for all After Effects operations**
+- \`get-results\`: Get last executed script results
 
-## 🎬 Animation Tools
-- \`set-layer-keyframe\`: Set keyframes
-- \`set-layer-expression\`: Apply expressions
-- \`animate-property\`: Auto-animate properties
+## 🔄 Standard Workflow
+1. Use \`run-script\` to execute desired script functionality
+2. Use \`get-results\` to retrieve execution results and status
 
-## ✨ Effects System
-- \`apply-effect\`: Apply single effects
-- \`apply-effect-template\`: Apply effect templates
-- \`batch-apply-effects\`: Batch apply effects`,
+## 📝 Detailed Script Documentation
 
-          en: `# 🛠️ Available Tools
+### 🗂️ Project Management Scripts
 
-## 📋 Project Management
-- \`run-script\`: Execute predefined scripts
-- \`get-results\`: Get last execution results
-- \`create-composition\`: Create new compositions
+#### \`listCompositions\` - List All Compositions
+**Parameters:**
+- \`includeDetails\` (boolean, optional): Include detailed information (default: true)
+- \`sortBy\` (string, optional): Sort method ["name", "duration", "created", "size"] (default: "name")
 
-## 🎨 Layer Management
-- \`create-text-layer\`: Create text layers
-- \`create-shape-layer\`: Create shape layers
-- \`create-solid-layer\`: Create solid layers
-- \`set-layer-properties\`: Modify layer properties
+**Example:**
+\`\`\`json
+{
+  "script": "listCompositions",
+  "parameters": {
+    "sortBy": "duration",
+    "includeDetails": true
+  }
+}
+\`\`\`
 
-## 🎬 Animation Tools
-- \`set-layer-keyframe\`: Set keyframes
-- \`set-layer-expression\`: Apply expressions
-- \`animate-property\`: Auto-animate properties
+#### \`getProjectInfo\` - Get Project Details
+**Optional Parameters:**
+- \`includeItems\` (boolean): Include project items list (default: true)
+- \`maxItems\` (integer): Maximum number of items to return (1-1000, default: 50)
+- \`includeCompositions\` (boolean): Include detailed composition info (default: false)
+- \`includeSystemInfo\` (boolean): Include system and application info (default: false)
 
-## ✨ Effects System
-- \`apply-effect\`: Apply single effects
-- \`apply-effect-template\`: Apply effect templates
-- \`batch-apply-effects\`: Batch apply effects`
-        }
+**Example:**
+\`\`\`json
+{
+  "script": "getProjectInfo",
+  "parameters": {
+    "includeItems": true,
+    "includeCompositions": true,
+    "maxItems": 100
+  }
+}
+\`\`\`
+
+#### \`getLayerInfo\` - Get Current Composition Layer Info
+**Optional Parameters:**
+- \`compName\` (string): Composition name, empty string uses active composition (default: "")
+- \`includeDetails\` (boolean): Include detailed layer properties (default: true)
+- \`includeTransform\` (boolean): Include transform property values (default: false)
+- \`layerTypes\` (array): Filter specific layer types, empty array returns all types (default: [])
+
+**Available Layer Types:**
+- \`text\`: Text layers
+- \`shape\`: Shape layers
+- \`solid\`: Solid color layers
+- \`footage\`: Footage/media layers
+- \`adjustment\`: Adjustment layers
+- \`camera\`: Camera layers
+- \`light\`: Light layers
+
+**Example:**
+\`\`\`json
+{
+  "script": "getLayerInfo",
+  "parameters": {
+    "compName": "Main Comp",
+    "includeDetails": true,
+    "includeTransform": true,
+    "layerTypes": ["text", "shape"]
+  }
+}
+\`\`\`
+
+### 🎨 Creation Scripts
+
+#### \`createComposition\` - Create New Composition
+**Required Parameters:**
+- \`name\` (string): Composition name (1-255 characters)
+
+**Optional Parameters:**
+- \`width\` (integer): Width in pixels (1-8192, default: 1920)
+- \`height\` (integer): Height in pixels (1-8192, default: 1080)
+- \`pixelAspect\` (number): Pixel aspect ratio (0.1-10.0, default: 1.0)
+- \`duration\` (number): Duration in seconds (0.1-3600, default: 10.0)
+- \`frameRate\` (number): Frame rate (1-120, default: 30.0)
+- \`backgroundColor\` (object): Background color {r: 0-255, g: 0-255, b: 0-255}
+
+#### \`createTextLayer\` - Create Text Layer
+**Required Parameters:**
+- \`text\` (string): Text content (1-1000 characters)
+
+**Optional Parameters:**
+- \`compName\` (string): Composition name (default: active composition)
+- \`position\` (array): Position [x, y] (default: [960, 540])
+- \`fontSize\` (number): Font size (1-500, default: 72)
+- \`color\` (array): Color [r, g, b] 0-1 range (default: [1, 1, 1])
+- \`startTime\` (number): Start time in seconds (default: 0)
+- \`duration\` (number): Duration in seconds (default: 5)
+- \`fontFamily\` (string): Font name (default: "Arial")
+- \`alignment\` (string): Alignment ["left", "center", "right"] (default: "center")
+
+#### \`createShapeLayer\` - Create Shape Layer
+**Optional Parameters:**
+- \`compName\` (string): Composition name (default: active composition)
+- \`shapeType\` (string): Shape type ["rectangle", "ellipse", "polygon", "star"] (default: "rectangle")
+- \`position\` (array): Position [x, y] (default: [960, 540])
+- \`size\` (array): Size [width, height] (default: [200, 200])
+- \`fillColor\` (array): Fill color [r, g, b] 0-1 range (default: [1, 0, 0])
+- \`strokeColor\` (array): Stroke color [r, g, b] 0-1 range (default: [0, 0, 0])
+- \`strokeWidth\` (number): Stroke width (0-100, default: 0)
+- \`startTime\` (number): Start time in seconds (default: 0)
+- \`duration\` (number): Duration in seconds (default: 5)
+- \`name\` (string): Layer name (default: "Shape Layer")
+- \`points\` (integer): Number of points for polygon/star (3-20, default: 5)
+
+#### \`createSolidLayer\` - Create Solid Layer
+**Optional Parameters:**
+- \`compName\` (string): Composition name (default: active composition)
+- \`color\` (array): Color [r, g, b] 0-1 range (default: [1, 1, 1])
+- \`name\` (string): Layer name (default: "Solid Layer")
+- \`position\` (array): Position [x, y] (default: [960, 540])
+- \`size\` (array): Size [width, height] (default: composition size)
+- \`startTime\` (number): Start time in seconds (default: 0)
+- \`duration\` (number): Duration in seconds (default: 5)
+- \`isAdjustment\` (boolean): Whether to create as adjustment layer (default: false)
+
+### ⚙️ Modification Scripts
+
+#### \`setLayerProperties\` - Set Layer Properties
+**Required Parameters:**
+- \`compName\` (string): Composition name
+
+**Layer Identification (choose one):**
+- \`layerName\` (string): Layer name
+- \`layerIndex\` (integer): Layer index (1-based)
+
+**Optional Properties:**
+- \`position\` (array): Position [x, y] or [x, y, z]
+- \`scale\` (array): Scale [x, y] or [x, y, z] percentage
+- \`rotation\` (number): Rotation angle
+- \`opacity\` (number): Opacity (0-100)
+- \`startTime\` (number): Start time
+- \`duration\` (number): Duration
+
+**Text Layer Specific:**
+- \`text\` (string): Text content
+- \`fontFamily\` (string): Font name
+- \`fontSize\` (number): Font size (1-500)
+- \`fillColor\` (array): Text color [r, g, b] 0-1 range
+
+#### \`setLayerKeyframe\` - Set Keyframe
+**Required Parameters:**
+- \`compName\` (string): Composition name
+- \`layerIndex\` (integer): Layer index (1-1000)
+- \`propertyName\` (string): Property name ["Position", "Scale", "Rotation", "Opacity", "Anchor Point"]
+- \`timeInSeconds\` (number): Time in seconds (0-3600)
+- \`value\` (number|array): Property value
+
+#### \`setLayerExpression\` - Apply Expression
+**Required Parameters:**
+- \`compName\` (string): Composition name
+- \`layerIndex\` (integer): Layer index (1-1000)
+- \`propertyName\` (string): Property name ["Position", "Scale", "Rotation", "Opacity", "Anchor Point"]
+- \`expressionString\` (string): Expression code (empty string removes expression)
+
+### 🎭 Effects Scripts
+
+#### \`applyEffect\` - Apply Effect
+**Required Parameters:**
+- \`compName\` (string): Composition name
+- \`layerIndex\` (integer): Layer index (1-1000)
+
+**Effect Identification (choose one):**
+- \`effectName\` (string): Effect display name
+- \`effectMatchName\` (string): Effect internal name (more reliable)
+- \`presetPath\` (string): Preset file path
+
+#### \`batchApplyEffects\` - Batch Apply Effects
+**Required Parameters:**
+- \`compName\` (string): Composition name
+- \`layerIndices\` (array): Array of layer indices
+
+**Effect Identification (choose one):**
+- \`effectTemplate\` (string): Template name ["Glow", "Drop Shadow", "Blur", "Sharpen", "Color Correction"]
+- \`effectMatchName\` (string): Effect internal name
+
+#### \`applyEffectTemplate\` - Apply Effect Template
+**Required Parameters:**
+- \`templateName\` (string): Template name
+
+**Optional Parameters:**
+- \`compName\` (string): Composition name (default: active composition)
+- \`layerIndex\` (integer): Layer index (1-1000, default: 1)
+- \`customSettings\` (object): Custom settings to override defaults
+
+**Available Templates:**
+- \`gaussian-blur\`: Gaussian Blur
+- \`directional-blur\`: Directional Blur
+- \`color-balance\`: Color Balance
+- \`brightness-contrast\`: Brightness & Contrast
+- \`glow\`: Glow Effect
+- \`drop-shadow\`: Drop Shadow
+- \`cinematic-look\`: Cinematic Look Effect Chain
+- \`text-pop\`: Text Pop Effect Chain
+
+### 🧪 Testing Scripts
+
+#### \`test-animation\` - Test Animation Functionality
+**Parameters:** No parameters required
+
+#### \`bridgeTestEffects\` - Test MCP Bridge Communication
+**Parameters:** No parameters required
+
+## 💡 Usage Tips
+
+### Parameter Validation
+All scripts include comprehensive parameter validation:
+- Required parameter existence
+- Correct parameter types
+- Valid value ranges
+- Legal enumeration values
+
+### Error Handling
+- Parameter validation failures return detailed error info and schema
+- Runtime errors provide specific error location and suggestions
+- Batch operations support skipping errors to continue processing
+
+### Best Practices
+1. Prefer \`effectMatchName\` over \`effectName\`
+2. Set \`skipErrors: true\` for batch operations
+3. Confirm layer type before text layer operations
+4. Use composition names instead of indices for stability`
       };
 
       const content = topic === "all" 
-        ? Object.values(helpSections).map(section => section[language as 'zh' | 'en']).join("\n\n")
-        : helpSections[topic as keyof typeof helpSections]?.[language as 'zh' | 'en'] || "Help topic not found";
+        ? Object.values(helpSections).join("\n\n")
+        : helpSections[topic as keyof typeof helpSections] || "Help topic not found";
 
       return ResponseFormatter.info("After Effects MCP Help", content);
     }
@@ -154,7 +314,8 @@ yarn install-bridge
           `Script "${script}" not found or not allowed`,
           [
             "Check script name spelling",
-            "View below available script list",
+            "View below available script list:",
+            availableScripts,
             "Ensure script is correctly installed"
           ]
         );
@@ -274,355 +435,6 @@ yarn install-bridge
             "Check temporary file permissions",
             "Ensure After Effects has write permissions",
             "Restart After Effects and MCP server"
-          ]
-        );
-      }
-    }
-  );
-
-  // Enhanced composition creation tool
-  server.tool(
-    "create-composition",
-    "Create new composition in After Effects, support preset and custom settings",
-    createCompositionSchema.shape,
-    async (params): Promise<MCPToolResponse> => {
-      try {
-        // Preset configuration
-        const presets = {
-          "HD_1080": { width: 1920, height: 1080, frameRate: 29.97, description: "Standard HD" },
-          "4K_UHD": { width: 3840, height: 2160, frameRate: 29.97, description: "4K Ultra HD" },
-          "HD_720": { width: 1280, height: 720, frameRate: 29.97, description: "HD 720p" },
-          "NTSC": { width: 720, height: 486, frameRate: 29.97, description: "NTSC Standard" },
-          "PAL": { width: 720, height: 576, frameRate: 25, description: "PAL Standard" },
-          "Instagram_Square": { width: 1080, height: 1080, frameRate: 30, description: "Instagram Square" },
-          "YouTube_16x9": { width: 1920, height: 1080, frameRate: 30, description: "YouTube 16:9" }
-        };
-
-        let finalParams = { ...params };
-        
-        // Apply preset
-        if (params.preset && params.preset !== "custom" && presets[params.preset]) {
-          const preset = presets[params.preset];
-          finalParams = { ...finalParams, ...preset };
-        }
-
-        // Set default values
-        finalParams.width = finalParams.width || 1920;
-        finalParams.height = finalParams.height || 1080;
-        finalParams.duration = finalParams.duration || 10.0;
-        finalParams.frameRate = finalParams.frameRate || 30.0;
-        finalParams.pixelAspect = finalParams.pixelAspect || 1.0;
-
-        // Verify dimensions
-        const validation = ParameterValidator.validateDimensions(finalParams.width, finalParams.height);
-        if (!validation.valid) {
-          return ResponseFormatter.error(validation.error || "Dimension validation failed");
-        }
-
-        // Execute creation command
-        AECommandManager.clearResults();
-        AECommandManager.writeCommand("createComposition", finalParams);
-
-        const settingsSummary = {
-          合成名称: finalParams.name,
-          尺寸: `${finalParams.width} × ${finalParams.height}px`,
-          持续时间: `${finalParams.duration}秒`,
-          帧率: `${finalParams.frameRate} fps`,
-          像素宽高比: finalParams.pixelAspect,
-          背景色: finalParams.backgroundColor 
-            ? `RGB(${finalParams.backgroundColor.r}, ${finalParams.backgroundColor.g}, ${finalParams.backgroundColor.b})`
-            : "默认（黑色）",
-          使用预设: finalParams.preset !== "custom" ? presets[finalParams.preset as keyof typeof presets]?.description : "自定义"
-        };
-
-        return ResponseFormatter.queuedCommand("createComposition", settingsSummary);
-        
-      } catch (error) {
-        return ResponseFormatter.error(
-          `Failed to create composition: ${String(error)}`,
-          [
-            "Check composition name validity",
-            "Ensure dimension parameters are within reasonable range",
-            "Verify After Effects response",
-            "Check available memory and disk space"
-          ]
-        );
-      }
-    }
-  );
-
-  // Enhanced keyframe setting tool
-  server.tool(
-    "set-layer-keyframe",
-    "Set keyframe for layer property, support various easing types and advanced options",
-    setLayerKeyframeSchema.shape,
-    async (parameters): Promise<MCPToolResponse> => {
-      try {
-        // Verify value format
-        const valueValidation = {
-          "Position": (val: any) => ParameterValidator.validatePosition(val),
-          "Scale": (val: any) => ParameterValidator.validateScale(val),
-          "Anchor Point": (val: any) => ParameterValidator.validatePosition(val),
-          "Rotation": (val: any) => ParameterValidator.validateRotation(val),
-          "Opacity": (val: any) => ParameterValidator.validateOpacity(val)
-        };
-
-        const validator = valueValidation[parameters.propertyName as keyof typeof valueValidation];
-        if (validator && !validator(parameters.value)) {
-          const expectedFormat = parameters.propertyName.includes("Position") || 
-                               parameters.propertyName.includes("Scale") || 
-                               parameters.propertyName.includes("Anchor") 
-            ? "Array [x, y] or [x, y, z]"
-            : parameters.propertyName === "Opacity" ? "Number 0-100" : "Number";
-
-          return ResponseFormatter.error(
-            `Invalid value format for property ${parameters.propertyName}`,
-            [
-              `Expected format: ${expectedFormat}`,
-              `Received: ${JSON.stringify(parameters.value)}`,
-              "Check value type and range"
-            ]
-          );
-        }
-
-        const enhancedParams = {
-          ...parameters,
-          easing: parameters.easing || "linear"
-        };
-
-        AECommandManager.writeCommand("setLayerKeyframe", enhancedParams);
-
-        const valueDisplay = Array.isArray(parameters.value) 
-          ? `[${parameters.value.join(', ')}]`
-          : parameters.value;
-
-        return ResponseFormatter.queuedCommand("setLayerKeyframe", {
-          属性: parameters.propertyName,
-          图层: `Layer ${parameters.layerIndex} (Composition ${parameters.compIndex})`,
-          时间: `${parameters.timeInSeconds}秒`,
-          数值: valueDisplay,
-          缓动: enhancedParams.easing
-        });
-
-      } catch (error) {
-        return ResponseFormatter.error(
-          `Failed to set keyframe: ${String(error)}`,
-          [
-            "Verify layer and composition index",
-            "Check property name spelling",
-            "Ensure value format matches property type"
-          ]
-        );
-      }
-    }
-  );
-
-  // Enhanced expression tool
-  server.tool(
-    "set-layer-expression",
-    "Set or remove expression for layer property, include syntax validation and common expression templates",
-    setLayerExpressionSchema.shape,
-    async (parameters): Promise<MCPToolResponse> => {
-      try {
-        // Basic expression validation
-        if (parameters.validate !== false && parameters.expressionString.trim()) {
-          const commonPatterns = [
-            "wiggle", "time", "value", "random", "Math.", "linear", "ease", 
-            "bounceIn", "bounceOut", "loopOut", "loopIn"
-          ];
-
-          const hasValidPattern = commonPatterns.some(pattern => 
-            parameters.expressionString.includes(pattern)
-          );
-
-          if (!hasValidPattern && parameters.expressionString.length > 10) {
-            return ResponseFormatter.info(
-              "Expression Syntax Reminder",
-              `Expression may contain syntax issues. Common patterns include: ${commonPatterns.slice(0, 5).join(', ')}\n\n` +
-              `**Expression Content:** \`${parameters.expressionString}\`\n\n` +
-              `Set \`validate: false\` to skip this check.`
-            );
-          }
-        }
-
-        AECommandManager.writeCommand("setLayerExpression", parameters);
-
-        const action = parameters.expressionString.trim() ? "Applied" : "Removed";
-        const expressionDisplay = parameters.expressionString.trim() 
-          ? `\`\`\`javascript\n${parameters.expressionString}\n\`\`\``
-          : "*(Removed)*";
-
-        return ResponseFormatter.queuedCommand("setLayerExpression", {
-          操作: action,
-          属性: parameters.propertyName,
-          图层: `Layer ${parameters.layerIndex} (Composition ${parameters.compIndex})`,
-          表达式: expressionDisplay
-        });
-
-      } catch (error) {
-        return ResponseFormatter.error(
-          `Failed to set expression: ${String(error)}`,
-          [
-            "Check expression syntax",
-            "Verify property name",
-            "Ensure layer and composition index valid"
-          ]
-        );
-      }
-    }
-  );
-
-  // Batch apply effects tool
-  server.tool(
-    "batch-apply-effects",
-    "Batch apply effects or effect templates to multiple layers",
-    batchApplyEffectsSchema.shape,
-    async ({ compIndex, layerIndices, effectTemplate, effectMatchName, effectSettings = {}, skipErrors = true }): Promise<MCPToolResponse> => {
-      try {
-        if (!effectTemplate && !effectMatchName) {
-          return ResponseFormatter.error(
-            "Must specify either effectTemplate or effectMatchName",
-            [
-              "Use effectTemplate to apply preset template",
-              "Use effectMatchName to apply specific effect",
-              "View effect-templates resource for available templates"
-            ]
-          );
-        }
-
-        const batchParams = {
-          compIndex,
-          layerIndices,
-          effectTemplate,
-          effectMatchName,
-          effectSettings,
-          skipErrors,
-          metadata: {
-            totalLayers: layerIndices.length,
-            timestamp: new Date().toISOString(),
-            batchId: `batch_${Date.now()}`
-          }
-        };
-
-        AECommandManager.clearResults();
-        AECommandManager.writeCommand("batchApplyEffects", batchParams);
-
-        const batchInfo = {
-          目标图层数量: layerIndices.length,
-          图层索引: layerIndices.join(', '),
-          特效类型: effectTemplate || effectMatchName,
-          跳过错误: skipErrors ? "是" : "否",
-          预计用时: layerIndices.length > 10 ? "较长" : "中等"
-        };
-
-        return ResponseFormatter.queuedCommand("batchApplyEffects", batchInfo);
-
-      } catch (error) {
-        return ResponseFormatter.error(
-          `Failed to batch apply effects: ${String(error)}`,
-          [
-            "Check layer indices",
-            "Ensure composition contains specified layers",
-            "Verify effect name or template name",
-            "Consider batch processing large layers"
-          ]
-        );
-      }
-    }
-  );
-
-  // Keep existing apply-effect and apply-effect-template tools, but use new response format
-  server.tool(
-    "apply-effect",
-    "Apply an effect to a layer in After Effects",
-    applyEffectSchema.shape,
-    async (parameters): Promise<MCPToolResponse> => {
-      try {
-        if (parameters.waitForResult) {
-          AECommandManager.clearResults();
-        }
-        
-        AECommandManager.writeCommand("applyEffect", parameters);
-        
-        if (parameters.waitForResult) {
-          await delay(1000);
-          const result = AECommandManager.readResults();
-          return ResponseFormatter.success("Effect application completed", result.data);
-        } else {
-          return ResponseFormatter.queuedCommand("applyEffect", {
-            特效名称: parameters.effectName || parameters.effectMatchName,
-            目标图层: `Layer ${parameters.layerIndex} (Composition ${parameters.compIndex})`
-          });
-        }
-      } catch (error) {
-        return ResponseFormatter.error(
-          `Failed to apply effect: ${String(error)}`,
-          [
-            "Check effect name",
-            "Ensure layer supports effect",
-            "Verify effect parameter format"
-          ]
-        );
-      }
-    }
-  );
-
-  server.tool(
-    "apply-effect-template",
-    "Apply a predefined effect template to a layer in After Effects",
-    applyEffectTemplateSchema.shape,
-    async (parameters): Promise<MCPToolResponse> => {
-      try {
-        if (parameters.waitForResult) {
-          AECommandManager.clearResults();
-        }
-        
-        AECommandManager.writeCommand("applyEffectTemplate", parameters);
-        
-        if (parameters.waitForResult) {
-          await delay(1000);
-          const result = AECommandManager.readResults();
-          return ResponseFormatter.success("Effect template application completed", result.data);
-        } else {
-          return ResponseFormatter.queuedCommand("applyEffectTemplate", {
-            模板名称: parameters.templateName,
-            目标图层: `Layer ${parameters.layerIndex} (Composition ${parameters.compIndex})`,
-            自定义设置: Object.keys(parameters.customSettings || {}).length > 0 ? "是" : "否"
-          });
-        }
-      } catch (error) {
-        return ResponseFormatter.error(
-          `Failed to apply effect template: ${String(error)}`,
-          [
-            "Check template name",
-            "Ensure layer type supports template",
-            "Verify custom parameter format"
-          ]
-        );
-      }
-    }
-  );
-
-  server.tool(
-    "run-bridge-test",
-    "Run the bridge test effects script to verify communication and apply test effects",
-    {},
-    async (): Promise<MCPToolResponse> => {
-      try {
-        AECommandManager.clearResults();
-        AECommandManager.writeCommand("bridgeTestEffects", {});
-        
-        return ResponseFormatter.queuedCommand("bridgeTestEffects", {
-          测试类型: "MCP Bridge Communication Test",
-          预期结果: "Apply test effects and return status information"
-        });
-      } catch (error) {
-        return ResponseFormatter.error(
-          `Bridge test failed: ${String(error)}`,
-          [
-            "Ensure After Effects is running",
-            "Check MCP Bridge Auto panel status",
-            "Verify script file integrity"
           ]
         );
       }
