@@ -73,8 +73,25 @@ function validateParameterType(value, paramSchema, paramName) {
                 if (paramSchema.maxLength && value.length > paramSchema.maxLength) {
                     return { error: paramName + " must be at most " + paramSchema.maxLength + " characters long" };
                 }
-                if (paramSchema.enum && paramSchema.enum.indexOf(value) === -1) {
-                    return { error: paramName + " must be one of: " + paramSchema.enum.join(", ") };
+                if (paramSchema.enum) {
+                    // 兼容性检查：手动遍历enum数组
+                    var enumFound = false;
+                    for (var j = 0; j < paramSchema.enum.length; j++) {
+                        if (paramSchema.enum[j] === value) {
+                            enumFound = true;
+                            break;
+                        }
+                    }
+                    if (!enumFound) {
+                        var enumValues = "";
+                        for (var k = 0; k < paramSchema.enum.length; k++) {
+                            enumValues += paramSchema.enum[k];
+                            if (k < paramSchema.enum.length - 1) {
+                                enumValues += ", ";
+                            }
+                        }
+                        return { error: paramName + " must be one of: " + enumValues };
+                    }
                 }
                 break;
                 

@@ -157,9 +157,11 @@ After Effects MCP uses a simplified three-tool architecture:
 - \`alignment\` (string): Alignment ["left", "center", "right"] (default: "center")
 
 #### \`createShapeLayer\` - Create Shape Layer
+**Required Parameters:**
+- \`shapeType\` (string): Shape type ["rectangle", "ellipse", "polygon", "star"]
+
 **Optional Parameters:**
 - \`compName\` (string): Composition name (default: active composition)
-- \`shapeType\` (string): Shape type ["rectangle", "ellipse", "polygon", "star"] (default: "rectangle")
 - \`position\` (array): Position [x, y] (default: [960, 540])
 - \`size\` (array): Size [width, height] (default: [200, 200])
 - \`fillColor\` (array): Fill color [r, g, b] 0-1 range (default: [1, 0, 0])
@@ -169,6 +171,49 @@ After Effects MCP uses a simplified three-tool architecture:
 - \`duration\` (number): Duration in seconds (default: 5)
 - \`name\` (string): Layer name (default: "Shape Layer")
 - \`points\` (integer): Number of points for polygon/star (3-20, default: 5)
+
+**Examples:**
+\`\`\`json
+{
+  "script": "createShapeLayer",
+  "parameters": {
+    "compName": "Main Comp",
+    "shapeType": "rectangle",
+    "size": [300, 200],
+    "fillColor": [0, 1, 0],
+    "name": "Green Rectangle"
+  }
+}
+\`\`\`
+
+\`\`\`json
+{
+  "script": "createShapeLayer",
+  "parameters": {
+    "compName": "Shape Comp",
+    "shapeType": "ellipse",
+    "size": [150, 150],
+    "fillColor": [1, 1, 0],
+    "strokeColor": [0, 0, 1],
+    "strokeWidth": 5,
+    "name": "Yellow Circle"
+  }
+}
+\`\`\`
+
+\`\`\`json
+{
+  "script": "createShapeLayer",
+  "parameters": {
+    "compName": "Polygon Comp",
+    "shapeType": "polygon",
+    "size": [180, 180],
+    "fillColor": [1, 0, 1],
+    "points": 6,
+    "name": "Hexagon"
+  }
+}
+\`\`\`
 
 #### \`createSolidLayer\` - Create Solid Layer
 **Optional Parameters:**
@@ -286,7 +331,9 @@ All scripts include comprehensive parameter validation:
 1. Prefer \`effectMatchName\` over \`effectName\`
 2. Set \`skipErrors: true\` for batch operations
 3. Confirm layer type before text layer operations
-4. Use composition names instead of indices for stability`
+4. Use composition names instead of indices for stability
+4. For createShapeLayer, always use \`shapeType\` parameter instead of \`shape\`
+5. For layer naming, use \`name\` parameter instead of \`layerName\``
       };
 
       const content = topic === "all" 
