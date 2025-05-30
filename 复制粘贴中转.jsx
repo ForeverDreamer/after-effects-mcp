@@ -1,12 +1,12 @@
 // ========================================
 // MCP网络动画素材创建脚本 - After Effects MCP优化版
-// 使用正确的MCP API调用格式
+// 使用正确的MCP API调用格式和参数名称
 // ========================================
 
 // === 配置参数 ===
 const projectConfig = {
   composition: {
-    name: "1_API现状展示",
+    name: "1_API_Status_Display",
     width: 1920,
     height: 1080,
     duration: 15.0,
@@ -127,22 +127,22 @@ function createMCPCenterNode() {
   
   const commands = [];
   const mcpLayerIndex = layerManager.getNextLayerIndex();
-  layerManager.registerLayer("MCP_中央节点", mcpLayerIndex);
+  layerManager.registerLayer("MCP_Center_Node", mcpLayerIndex);
   
-  // 创建MCP中央节点 - 圆形固体层
+  // 创建MCP中央节点 - 圆形形状层（修正参数名称）
   const createMCPCommand = {
     tool: "run-script",
     parameters: {
       script: "createShapeLayer",
       parameters: {
         compName: projectConfig.composition.name,
-        shapeType: "ellipse",
+        shapeType: "ellipse",  // 修正：使用shapeType而不是shape
         position: [projectConfig.layout.centerX, projectConfig.layout.centerY],
         size: [projectConfig.layout.mcpSize, projectConfig.layout.mcpSize],
         fillColor: [1.0, 0.8, 0.2], // 金色
         strokeColor: [1.0, 1.0, 1.0],
         strokeWidth: 3,
-        name: "MCP_中央节点",
+        name: "MCP_Center_Node",  // 修正：使用name而不是layerName
         startTime: 0,
         duration: projectConfig.composition.duration
       }
@@ -173,7 +173,7 @@ function createMCPCenterNode() {
   
   // 添加MCP标签
   const labelLayerIndex = layerManager.getNextLayerIndex();
-  layerManager.registerLayer("MCP_标签", labelLayerIndex);
+  layerManager.registerLayer("MCP_Label", labelLayerIndex);
   
   const mcpLabelCommand = {
     tool: "run-script",
@@ -181,13 +181,13 @@ function createMCPCenterNode() {
       script: "createTextLayer",
       parameters: {
         compName: projectConfig.composition.name,
-        text: "MCP统一管理中心",
+        text: "MCP Unified Management Center",
         position: [projectConfig.layout.centerX, projectConfig.layout.centerY + 100],
         fontSize: 24,
         color: [1.0, 1.0, 1.0],
         fontFamily: "Arial",
         alignment: "center",
-        name: "MCP_标签",
+        name: "MCP_Label",  // 修正：使用name而不是layerName（如果该脚本支持）
         startTime: 0,
         duration: projectConfig.composition.duration
       }
@@ -212,22 +212,22 @@ function createAPINodes() {
   
   positions.forEach((pos, index) => {
     const nodeLayerIndex = layerManager.getNextLayerIndex();
-    layerManager.registerLayer(`节点_${pos.node.service}`, nodeLayerIndex);
+    layerManager.registerLayer(`Node_${pos.node.service}`, nodeLayerIndex);
     
-    // 创建圆形API节点
+    // 创建圆形API节点（修正参数名称）
     const createNodeCommand = {
       tool: "run-script",
       parameters: {
         script: "createShapeLayer",
         parameters: {
           compName: projectConfig.composition.name,
-          shapeType: "ellipse",
+          shapeType: "ellipse",  // 修正：使用shapeType而不是shape
           position: [pos.x, pos.y],
           size: [projectConfig.layout.nodeSize, projectConfig.layout.nodeSize],
           fillColor: pos.node.color,
           strokeColor: [0.9, 0.9, 0.9],
           strokeWidth: 2,
-          name: `节点_${pos.node.service}`,
+          name: `Node_${pos.node.service}`,  // 修正：使用name而不是layerName
           startTime: 0,
           duration: projectConfig.composition.duration
         }
@@ -278,7 +278,7 @@ function createNodeLabels() {
     const labelY = projectConfig.layout.centerY + labelRadius * Math.sin(pos.angle);
     
     const labelLayerIndex = layerManager.getNextLayerIndex();
-    layerManager.registerLayer(`标签_${pos.node.service}`, labelLayerIndex);
+    layerManager.registerLayer(`Label_${pos.node.service}`, labelLayerIndex);
     
     const createTextCommand = {
       tool: "run-script",
@@ -292,7 +292,7 @@ function createNodeLabels() {
           color: [0.9, 0.9, 0.9],
           fontFamily: "Arial",
           alignment: "center",
-          name: `标签_${pos.node.service}`,
+          name: `Label_${pos.node.service}`,  // 修正：使用name而不是layerName（如果该脚本支持）
           startTime: 0,
           duration: projectConfig.composition.duration
         }
@@ -314,8 +314,8 @@ function addMCPEntryAnimation() {
   console.log("🎭 步骤5: 添加MCP入场动画...");
   
   const commands = [];
-  const mcpLayerIndex = layerManager.getLayerIndex("MCP_中央节点");
-  const labelLayerIndex = layerManager.getLayerIndex("MCP_标签");
+  const mcpLayerIndex = layerManager.getLayerIndex("MCP_Center_Node");
+  const labelLayerIndex = layerManager.getLayerIndex("MCP_Label");
   
   // MCP节点缩放入场动画
   const mcpScaleStart = {
@@ -391,8 +391,8 @@ function addAPINodesEntryAnimation() {
   const commands = [];
   
   projectConfig.apiNodes.forEach((node, index) => {
-    const nodeLayerIndex = layerManager.getLayerIndex(`节点_${node.service}`);
-    const labelLayerIndex = layerManager.getLayerIndex(`标签_${node.service}`);
+    const nodeLayerIndex = layerManager.getLayerIndex(`Node_${node.service}`);
+    const labelLayerIndex = layerManager.getLayerIndex(`Label_${node.service}`);
     
     const startTime = projectConfig.timing.nodeStartDelay + (index * projectConfig.timing.nodeInterval);
     
@@ -471,7 +471,7 @@ function addRotationExpressions() {
   const commands = [];
   
   // MCP节点缓慢旋转
-  const mcpLayerIndex = layerManager.getLayerIndex("MCP_中央节点");
+  const mcpLayerIndex = layerManager.getLayerIndex("MCP_Center_Node");
   const mcpRotationExpression = {
     tool: "run-script",
     parameters: {
@@ -489,7 +489,7 @@ function addRotationExpressions() {
   
   // API节点轻微摆动
   projectConfig.apiNodes.forEach((node, index) => {
-    const nodeLayerIndex = layerManager.getLayerIndex(`节点_${node.service}`);
+    const nodeLayerIndex = layerManager.getLayerIndex(`Node_${node.service}`);
     const oscillationExpression = {
       tool: "run-script",
       parameters: {
@@ -520,7 +520,7 @@ function addPulseAnimations() {
   const commands = [];
   
   // MCP节点脉冲动画
-  const mcpLayerIndex = layerManager.getLayerIndex("MCP_中央节点");
+  const mcpLayerIndex = layerManager.getLayerIndex("MCP_Center_Node");
   const mcpPulseExpression = {
     tool: "run-script",
     parameters: {

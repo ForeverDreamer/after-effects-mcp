@@ -33,7 +33,7 @@ var SET_LAYER_KEYFRAME_SCHEMA = {
             max: 3600.0
         },
         value: {
-            type: "number",
+            type: ["number", "array"],
             description: "属性值（根据属性类型可能是数字或数组）",
             example: 50
         }
@@ -56,7 +56,17 @@ var SET_LAYER_KEYFRAME_SCHEMA = {
                 layerIndex: 2,
                 propertyName: "Position",
                 timeInSeconds: 2.5,
-                value: [960, 540]
+                value: [960, 540, 0]
+            }
+        },
+        {
+            name: "设置缩放关键帧",
+            args: {
+                compName: "Animation Comp",
+                layerIndex: 1,
+                propertyName: "Scale",
+                timeInSeconds: 1.0,
+                value: [100, 100, 100]
             }
         }
     ]
@@ -123,10 +133,44 @@ function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, val
              return JSON.stringify({ success: false, message: "Property '" + params.propertyName + "' cannot be keyframed." });
         }
 
+        // 验证value类型是否匹配属性要求
+        var expectedDimensions = property.value.length;
+        if (typeof expectedDimensions !== 'undefined') {
+            // 这是一个多维属性（如Position, Scale, Anchor Point）
+            if (!(params.value instanceof Array)) {
+                return JSON.stringify({ 
+                    success: false, 
+                    message: "Property '" + params.propertyName + "' requires an array value with " + expectedDimensions + " dimensions, but got: " + typeof params.value 
+                });
+            }
+            if (params.value.length !== expectedDimensions) {
+                return JSON.stringify({ 
+                    success: false, 
+                    message: "Property '" + params.propertyName + "' requires " + expectedDimensions + " dimensions, but got " + params.value.length 
+                });
+            }
+        } else {
+            // 这是一个单维属性（如Opacity, Rotation）
+            if (params.value instanceof Array) {
+                return JSON.stringify({ 
+                    success: false, 
+                    message: "Property '" + params.propertyName + "' requires a single number value, but got an array" 
+                });
+            }
+            if (typeof params.value !== 'number') {
+                return JSON.stringify({ 
+                    success: false, 
+                    message: "Property '" + params.propertyName + "' requires a number value, but got: " + typeof params.value 
+                });
+            }
+        }
+
+        // 确保属性有至少一个关键帧，如果没有则创建一个
         if (property.numKeys === 0 && !property.isTimeVarying) {
              property.setValueAtTime(comp.time, property.value);
         }
 
+        // 设置关键帧
         property.setValueAtTime(params.timeInSeconds, params.value);
 
         return JSON.stringify({ 
@@ -137,7 +181,8 @@ function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, val
                 layerName: layer.name,
                 propertyName: params.propertyName,
                 timeInSeconds: params.timeInSeconds,
-                value: params.value
+                value: params.value,
+                propertyDimensions: expectedDimensions || 1
             }
         });
     } catch (e) {
@@ -147,3 +192,62 @@ function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, val
         });
     }
 } 
+
+// ========== 手动测试调用代码 ==========
+// 取消下面的注释来手动测试
+
+// 测试设置透明度关键帧
+// var result1 = setLayerKeyframe("", 1, "Opacity", 1.0, 50);
+// alert("Opacity Test Result:\n" + result1);
+
+// 测试设置缩放关键帧（修复前可能导致卡死的情况）
+// var result2 = setLayerKeyframe("", 1, "Scale", 2.0, [120, 120, 100]);
+// alert("Scale Test Result:\n" + result2);
+
+// 测试设置位置关键帧
+// var result3 = setLayerKeyframe("", 1, "Position", 3.0, [960, 540, 0]);
+// alert("Position Test Result:\n" + result3);
+
+// 测试错误情况：Scale使用单个数字（这应该会报错）
+// var result4 = setLayerKeyframe("", 1, "Scale", 4.0, 100);
+// alert("Scale Error Test Result:\n" + result4);
+
+// 一键测试所有情况的函数
+function testAllKeyframes() {
+    var results = [];
+    
+    try {
+        // 测试1: 透明度
+        results.push("=== 测试透明度关键帧 ===");
+        var result1 = setLayerKeyframe("", 1, "Opacity", 1.0, 50);
+        results.push("结果: " + result1);
+        
+        // 测试2: 缩放（正确的3维数组格式）
+        results.push("\n=== 测试缩放关键帧（正确格式）===");
+        var result2 = setLayerKeyframe("", 1, "Scale", 2.0, [120, 120, 100]);
+        results.push("结果: " + result2);
+        
+        // 测试3: 位置（正确的3维数组格式）
+        results.push("\n=== 测试位置关键帧 ===");
+        var result3 = setLayerKeyframe("", 1, "Position", 3.0, [960, 540, 0]);
+        results.push("结果: " + result3);
+        
+        // 测试4: 错误情况 - Scale使用单个数字
+        results.push("\n=== 测试缩放关键帧（错误格式）===");
+        var result4 = setLayerKeyframe("", 1, "Scale", 4.0, 100);
+        results.push("结果: " + result4);
+        
+        // 测试5: 旋转测试
+        results.push("\n=== 测试旋转关键帧 ===");
+        var result5 = setLayerKeyframe("", 1, "Rotation", 5.0, 45);
+        results.push("结果: " + result5);
+        
+    } catch (e) {
+        results.push("测试过程中发生错误: " + e.toString());
+    }
+    
+    alert(results.join("\n"));
+}
+
+// 取消下面的注释来运行完整测试
+// testAllKeyframes(); 
