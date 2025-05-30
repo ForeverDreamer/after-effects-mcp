@@ -1,7 +1,8 @@
 // applyEffect.jsx
-// Applies an effect to a specified layer in a composition
+// Applies an effect to a specified layer in a composition (Refactored)
 
 //@include "utils.jsx"
+//@include "effectsCore.jsx"
 
 // ========== 参数验证Schema ==========
 var APPLY_EFFECT_SCHEMA = {
@@ -87,103 +88,50 @@ var APPLY_EFFECT_SCHEMA = {
 
 function applyEffect(args) {
     try {
-        // 参数验证
-        var validation = validateParameters(args, APPLY_EFFECT_SCHEMA);
+        // 参数验证（使用增强的验证函数）
+        var validation = validateEffectParameters(args, APPLY_EFFECT_SCHEMA, function(params) {
+            // 自定义验证逻辑
+            if (!params.effectName && !params.effectMatchName && !params.presetPath) {
+                return {
+                    isValid: false,
+                    errors: ["You must specify either effectName, effectMatchName, or presetPath"]
+                };
+            }
+            return { isValid: true };
+        });
+        
         if (!validation.isValid) {
-            return JSON.stringify({
-                status: "error",
-                message: "Parameter validation failed",
+            return createStandardResponse("error", "Parameter validation failed", {
                 errors: validation.errors,
                 schema: APPLY_EFFECT_SCHEMA
-            }, null, 2);
+            });
         }
         
-        // 使用验证后的参数
         var params = validation.normalizedArgs;
         
-        // 验证特效参数逻辑
-        if (!params.effectName && !params.effectMatchName && !params.presetPath) {
-            return JSON.stringify({
-                status: "error",
-                message: "You must specify either effectName, effectMatchName, or presetPath"
-            }, null, 2);
+        // 查找图层（使用核心工具函数）
+        var layerResult = findLayerInComposition(params.compName, params.layerIndex);
+        if (!layerResult.success) {
+            return createStandardResponse("error", layerResult.error);
         }
         
-        // Find the composition using utility function
-        var compResult = getCompositionByName(params.compName);
-        if (compResult.error) {
-            return JSON.stringify({
-                status: "error",
-                message: compResult.error
-            }, null, 2);
-        }
-        var comp = compResult.composition;
+        var comp = layerResult.composition;
+        var layer = layerResult.layer;
         
-        // Find the layer by index
-        var layer = comp.layer(params.layerIndex);
-        if (!layer) {
-            return JSON.stringify({
-                status: "error",
-                message: "Layer not found at index " + params.layerIndex + " in composition '" + comp.name + "'"
-            }, null, 2);
+        // 应用特效（使用核心函数）
+        var effectResult = applySingleEffect(layer, {
+            effectName: params.effectName,
+            effectMatchName: params.effectMatchName,
+            presetPath: params.presetPath,
+            effectSettings: params.effectSettings
+        });
+        
+        if (!effectResult.success) {
+            return createStandardResponse("error", effectResult.error);
         }
         
-        var effectResult;
-        
-        // Apply preset if a path is provided
-        if (params.presetPath) {
-            var presetFile = new File(params.presetPath);
-            if (!presetFile.exists) {
-                return JSON.stringify({
-                    status: "error",
-                    message: "Effect preset file not found: " + params.presetPath
-                }, null, 2);
-            }
-            
-            // Apply the preset to the layer
-            layer.applyPreset(presetFile);
-            effectResult = {
-                type: "preset",
-                name: params.presetPath.split('/').pop().split('\\').pop(),
-                applied: true
-            };
-        }
-        // Apply effect by match name (more reliable method)
-        else if (params.effectMatchName) {
-            var effect = layer.Effects.addProperty(params.effectMatchName);
-            effectResult = {
-                type: "effect",
-                name: effect.name,
-                matchName: effect.matchName,
-                index: effect.propertyIndex
-            };
-            
-            // Apply settings if provided
-            if (params.effectSettings) {
-                applyEffectSettings(effect, params.effectSettings);
-            }
-        }
-        // Apply effect by display name
-        else {
-            // Get the effect from the Effect menu
-            var effect = layer.Effects.addProperty(params.effectName);
-            effectResult = {
-                type: "effect",
-                name: effect.name,
-                matchName: effect.matchName,
-                index: effect.propertyIndex
-            };
-            
-            // Apply settings if provided
-            if (params.effectSettings) {
-                applyEffectSettings(effect, params.effectSettings);
-            }
-        }
-        
-        return JSON.stringify({
-            status: "success",
-            message: "Effect applied successfully",
-            effect: effectResult,
+        return createStandardResponse("success", "Effect applied successfully", {
+            effect: effectResult.effect,
             layer: {
                 name: layer.name,
                 index: params.layerIndex
@@ -191,12 +139,10 @@ function applyEffect(args) {
             composition: {
                 name: comp.name
             }
-        }, null, 2);
+        });
+        
     } catch (error) {
-        return JSON.stringify({
-            status: "error",
-            message: error.toString()
-        }, null, 2);
+        return createStandardResponse("error", "Unexpected error: " + error.toString());
     }
 }
 

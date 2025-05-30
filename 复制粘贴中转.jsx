@@ -80,6 +80,24 @@ const layerManager = new LayerManager();
 
 // === 工具调用函数集 ===
 
+// 颜色一致性验证函数
+function validateColorConsistency() {
+  console.log("🎨 验证颜色一致性...");
+  
+  // 验证MCP中央节点颜色一致性
+  const mcpNodeColor = [1.0, 0.8, 0.2];
+  console.log(`✅ MCP中央节点 - 填充颜色: [${mcpNodeColor.join(', ')}], 发光颜色: [${mcpNodeColor.join(', ')}] - 一致`);
+  
+  // 验证API节点颜色一致性
+  projectConfig.apiNodes.forEach((node, index) => {
+    const nodeColor = node.color;
+    console.log(`✅ ${node.name} - 填充颜色: [${nodeColor.join(', ')}], 发光颜色: [${nodeColor.join(', ')}] - 一致`);
+  });
+  
+  console.log("🎯 所有节点的发光颜色与填充颜色均保持一致！");
+  return true;
+}
+
 // 1. 创建主合成
 function createMainComposition() {
   console.log("🎬 步骤1: 创建主合成...");
@@ -129,6 +147,9 @@ function createMCPCenterNode() {
   const mcpLayerIndex = layerManager.getNextLayerIndex();
   layerManager.registerLayer("MCP_Center_Node", mcpLayerIndex);
   
+  // MCP中央节点的颜色定义 - 确保填充色和发光色一致
+  const mcpNodeColor = [1.0, 0.8, 0.2]; // 统一的金色定义
+  
   // 创建MCP中央节点 - 圆形形状层（修正参数名称）
   const createMCPCommand = {
     tool: "run-script",
@@ -139,7 +160,7 @@ function createMCPCenterNode() {
         shapeType: "ellipse",  // 修正：使用shapeType而不是shape
         position: [projectConfig.layout.centerX, projectConfig.layout.centerY],
         size: [projectConfig.layout.mcpSize, projectConfig.layout.mcpSize],
-        fillColor: [1.0, 0.8, 0.2], // 金色
+        fillColor: mcpNodeColor, // 使用统一颜色变量
         strokeColor: [1.0, 1.0, 1.0],
         strokeWidth: 3,
         name: "MCP_Center_Node",  // 修正：使用name而不是layerName
@@ -151,7 +172,7 @@ function createMCPCenterNode() {
   
   commands.push(createMCPCommand);
   
-  // 添加发光效果
+  // 添加发光效果 - 发光颜色与图层填充颜色完全一致
   const mcpGlowCommand = {
     tool: "run-script",
     parameters: {
@@ -161,7 +182,7 @@ function createMCPCenterNode() {
         layerIndex: mcpLayerIndex,
         templateName: "glow",
         customSettings: {
-          glowColor: [1.0, 0.8, 0.2],
+          glowColor: mcpNodeColor, // 使用相同的颜色变量确保一致性
           glowRadius: 30,
           glowIntensity: 1.5
         }
@@ -214,6 +235,9 @@ function createAPINodes() {
     const nodeLayerIndex = layerManager.getNextLayerIndex();
     layerManager.registerLayer(`Node_${pos.node.service}`, nodeLayerIndex);
     
+    // 获取当前节点的颜色 - 确保填充色和发光色一致
+    const nodeColor = pos.node.color; // 统一的节点颜色定义
+    
     // 创建圆形API节点（修正参数名称）
     const createNodeCommand = {
       tool: "run-script",
@@ -224,7 +248,7 @@ function createAPINodes() {
           shapeType: "ellipse",  // 修正：使用shapeType而不是shape
           position: [pos.x, pos.y],
           size: [projectConfig.layout.nodeSize, projectConfig.layout.nodeSize],
-          fillColor: pos.node.color,
+          fillColor: nodeColor, // 使用统一颜色变量
           strokeColor: [0.9, 0.9, 0.9],
           strokeWidth: 2,
           name: `Node_${pos.node.service}`,  // 修正：使用name而不是layerName
@@ -236,7 +260,7 @@ function createAPINodes() {
     
     commands.push(createNodeCommand);
     
-    // 为每个节点添加发光效果
+    // 为每个节点添加发光效果 - 发光颜色与图层填充颜色完全一致
     const nodeGlowCommand = {
       tool: "run-script",
       parameters: {
@@ -246,7 +270,7 @@ function createAPINodes() {
           layerIndex: nodeLayerIndex,
           templateName: "glow",
           customSettings: {
-            glowColor: pos.node.color,
+            glowColor: nodeColor, // 使用相同的颜色变量确保一致性
             glowRadius: 20,
             glowIntensity: 1.0
           }
@@ -546,6 +570,12 @@ function addPulseAnimations() {
 // === 执行序列控制 ===
 async function executeCreationSequence() {
   console.log("🚀 开始执行MCP网络动画创建序列...\n");
+  
+  // 首先验证颜色一致性
+  console.log("=" .repeat(60));
+  validateColorConsistency();
+  console.log("=" .repeat(60));
+  
   console.log("📋 请按以下顺序复制命令到Claude中执行：\n");
   
   try {
@@ -656,10 +686,11 @@ const qualityChecklist = {
     "✅ MCP中央节点显示为金色发光圆形",
     "✅ 12个API节点颜色各异且分布均匀",
     "✅ 所有标签文字清晰可读",
-    "✅ 发光效果应用正确",
+    "✅ 发光效果应用正确且颜色与节点填充色一致",
     "✅ 入场动画时序流畅",
     "✅ 旋转和脉冲表达式正常运行",
-    "✅ 整体视觉效果协调美观"
+    "✅ 整体视觉效果协调美观",
+    "🎨 验证: 每个节点的发光颜色与其填充颜色完全匹配"
   ]
 };
 

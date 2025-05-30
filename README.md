@@ -10,7 +10,7 @@
 
 ### ✨ **统一架构设计**
 - **3个核心工具**: `get-help`, `run-script`, `get-results` 
-- **14个专业脚本**: 涵盖创建、修改、特效、信息获取
+- **21个专业脚本**: 涵盖创建、修改、特效、信息获取、批处理操作
 - **4个动态资源**: 实时获取项目状态和数据
 - **2个智能提示**: 项目分析和动画创建助手
 
@@ -19,12 +19,14 @@
 - **模块化设计**: `//@include` 方式整合所有功能
 - **异步通信**: 基于临时文件的可靠通信机制
 - **错误处理**: 完整的错误捕获和友好提示
+- **批处理引擎**: 高效的批量操作处理框架
 
 ### 🎯 **面向LLM优化**
 - **结构化接口**: 标准化的参数和返回格式
 - **详细文档**: 完整的使用示例和最佳实践
 - **智能提示**: 上下文相关的操作建议
 - **测试验证**: 100%测试覆盖率保证可靠性
+- **批处理支持**: 一次操作处理多个对象，大幅提升效率
 
 ## 📦 安装配置
 
@@ -114,15 +116,26 @@ yarn start
 - `createShapeLayer` - 创建形状图层
 - `createSolidLayer` - 创建纯色图层
 
+#### 🚀 **批量创建类**
+- `batchCreateTextLayers` - 批量创建多个文本图层
+- `batchCreateShapeLayers` - 批量创建多个形状图层
+- `batchCreateSolidLayers` - 批量创建多个纯色图层
+
 #### ⚙️ **修改操作类**
 - `setLayerProperties` - 设置图层属性
 - `setLayerKeyframe` - 设置关键帧
 - `setLayerExpression` - 设置表达式
 
+#### 🔄 **批量修改类**
+- `batchSetLayerProperties` - 批量设置图层属性
+- `batchSetLayerKeyframes` - 批量设置关键帧
+- `batchSetLayerExpressions` - 批量设置表达式
+
 #### ✨ **特效操作类**
 - `applyEffect` - 应用单个特效
 - `batchApplyEffects` - 批量应用特效
 - `applyEffectTemplate` - 应用特效模板
+- `batchApplyEffectTemplates` - 批量应用特效模板
 
 #### 🧪 **测试调试类**
 - `bridgeTestEffects` - 桥接通信测试
@@ -450,7 +463,172 @@ yarn start
 
 ### 高级用法示例
 
-#### 🎨 **批量特效应用**
+#### 🚀 **批处理功能 - 高效批量操作**
+
+After Effects MCP 提供强大的批处理功能，支持一次性处理多个对象，大幅提升工作效率：
+
+##### **批量创建文本图层**
+```json
+{
+  "tool": "run-script",
+  "arguments": {
+    "script": "batchCreateTextLayers",
+    "parameters": {
+      "textLayers": [
+        {
+          "text": "主标题",
+          "compName": "标题合成",
+          "position": [960, 200],
+          "fontSize": 72,
+          "color": [1, 1, 1],
+          "fontFamily": "Arial Black"
+        },
+        {
+          "text": "副标题",
+          "compName": "标题合成",
+          "position": [960, 350],
+          "fontSize": 48,
+          "color": [0.8, 0.8, 0.8]
+        },
+        {
+          "text": "描述文字",
+          "compName": "标题合成",
+          "position": [960, 450],
+          "fontSize": 32,
+          "color": [0.6, 0.6, 0.6]
+        }
+      ],
+      "skipErrors": true
+    }
+  }
+}
+```
+
+##### **批量设置关键帧动画**
+```json
+{
+  "tool": "run-script",
+  "arguments": {
+    "script": "batchSetLayerKeyframes",
+    "parameters": {
+      "keyframes": [
+        {
+          "compName": "动画合成",
+          "layerIndex": 1,
+          "propertyName": "Opacity",
+          "timeInSeconds": 0,
+          "value": 0
+        },
+        {
+          "compName": "动画合成",
+          "layerIndex": 1,
+          "propertyName": "Opacity",
+          "timeInSeconds": 1,
+          "value": 100
+        },
+        {
+          "compName": "动画合成",
+          "layerIndex": 2,
+          "propertyName": "Position",
+          "timeInSeconds": 0,
+          "value": [100, 540]
+        },
+        {
+          "compName": "动画合成",
+          "layerIndex": 2,
+          "propertyName": "Position",
+          "timeInSeconds": 2,
+          "value": [1820, 540]
+        }
+      ],
+      "skipErrors": true
+    }
+  }
+}
+```
+
+##### **批量应用特效模板**
+```json
+{
+  "tool": "run-script",
+  "arguments": {
+    "script": "batchApplyEffectTemplates",
+    "parameters": {
+      "effectApplications": [
+        {
+          "templateName": "glow",
+          "compName": "文本合成",
+          "layerIndex": 1,
+          "customSettings": {
+            "glow_intensity": 2.5,
+            "glow_color": [0.2, 0.6, 1.0]
+          }
+        },
+        {
+          "templateName": "drop-shadow",
+          "compName": "文本合成",
+          "layerIndex": 1,
+          "customSettings": {
+            "shadow_distance": 8,
+            "shadow_opacity": 75
+          }
+        },
+        {
+          "templateName": "cinematic-look",
+          "compName": "色彩合成",
+          "layerIndex": 2
+        }
+      ],
+      "skipErrors": true
+    }
+  }
+}
+```
+
+##### **批量设置图层属性**
+```json
+{
+  "tool": "run-script",
+  "arguments": {
+    "script": "batchSetLayerProperties",
+    "parameters": {
+      "layerProperties": [
+        {
+          "compName": "动画合成",
+          "layerIndex": 1,
+          "position": [300, 200],
+          "opacity": 80,
+          "scale": [120, 120]
+        },
+        {
+          "compName": "动画合成",
+          "layerIndex": 2,
+          "position": [700, 200],
+          "opacity": 90,
+          "rotation": 15
+        },
+        {
+          "compName": "文本合成",
+          "layerName": "标题",
+          "text": "新标题",
+          "fontSize": 72,
+          "fillColor": [1, 1, 1]
+        }
+      ],
+      "skipErrors": true
+    }
+  }
+}
+```
+
+##### **批处理功能特性**
+- ✅ **错误恢复**: `skipErrors: true` 跳过失败项继续处理
+- ✅ **验证模式**: `validateOnly: true` 仅验证参数不执行操作
+- ✅ **进度跟踪**: 详细的成功/失败统计和错误报告
+- ✅ **撤销支持**: 整个批处理操作包装在单个撤销组中
+- ✅ **性能优化**: 减少通信开销，提升处理效率
+
+#### 🎨 **传统批量特效应用**
 ```json
 {
   "tool": "run-script",
@@ -717,3 +895,430 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 ---
 
 **🎬 让LLM轻松驾驭After Effects，创造无限可能！** 
+
+## 🚀 详细脚本说明
+
+### 📊 **信息获取类脚本**
+
+#### `getProjectInfo` - 获取项目详细信息
+**功能**: 获取当前After Effects项目的完整信息
+**参数**: 
+```json
+{
+  "includeItems": true,          // 是否包含项目素材列表
+  "maxItems": 50,               // 最大返回素材数量 (1-1000)
+  "includeCompositions": false, // 是否包含合成详细信息
+  "includeSystemInfo": false    // 是否包含系统信息
+}
+```
+
+#### `listCompositions` - 列出所有合成
+**功能**: 获取项目中所有合成的列表和基本信息
+**参数**:
+```json
+{
+  "includeDetails": true,  // 包含详细信息
+  "sortBy": "name"        // 排序方式: name, duration, created, size
+}
+```
+
+#### `getLayerInfo` - 获取图层信息
+**功能**: 获取指定合成中的图层详细信息
+**参数**:
+```json
+{
+  "compName": "",              // 合成名称，空字符串使用活动合成
+  "includeDetails": true,      // 包含详细图层属性
+  "includeTransform": false,   // 包含变换属性值
+  "layerTypes": []            // 过滤图层类型: text, shape, solid, footage, adjustment, camera, light
+}
+```
+
+### 🎨 **创建操作类脚本**
+
+#### `createComposition` - 创建新合成
+**功能**: 创建新的After Effects合成
+**必需参数**: `name` (合成名称)
+**可选参数**:
+```json
+{
+  "width": 1920,           // 宽度 (1-8192像素)
+  "height": 1080,          // 高度 (1-8192像素)
+  "frameRate": 30.0,       // 帧率 (1-120 fps)
+  "duration": 10.0,        // 持续时间 (0.1-3600秒)
+  "pixelAspect": 1.0,      // 像素长宽比 (0.1-10.0)
+  "backgroundColor": {"r": 0, "g": 0, "b": 0}  // 背景颜色
+}
+```
+
+#### `createTextLayer` - 创建文本图层
+**功能**: 在指定合成中创建文本图层
+**必需参数**: `text` (文本内容)
+**可选参数**:
+```json
+{
+  "compName": "",            // 合成名称，默认使用活动合成
+  "position": [960, 540],    // 位置坐标 [x, y]
+  "fontSize": 72,            // 字体大小 (1-500)
+  "color": [1, 1, 1],       // 文字颜色 [r, g, b] 0-1范围
+  "fontFamily": "Arial",     // 字体名称
+  "alignment": "center",     // 对齐方式: left, center, right
+  "startTime": 0,           // 开始时间 (秒)
+  "duration": 5             // 持续时间 (秒)
+}
+```
+
+#### `createShapeLayer` - 创建形状图层
+**功能**: 创建各种几何形状图层
+**可选参数**:
+```json
+{
+  "compName": "",              // 合成名称
+  "shapeType": "rectangle",    // 形状类型: rectangle, ellipse, polygon, star
+  "position": [960, 540],      // 位置坐标
+  "size": [200, 200],         // 尺寸 [宽度, 高度]
+  "fillColor": [1, 0, 0],     // 填充颜色 [r, g, b]
+  "strokeColor": [0, 0, 0],   // 描边颜色
+  "strokeWidth": 0,           // 描边宽度 (0-100)
+  "points": 5,                // 多边形/星形点数 (3-20)
+  "name": "Shape Layer"       // 图层名称
+}
+```
+
+#### `createSolidLayer` - 创建纯色图层
+**功能**: 创建纯色背景或调整图层
+**可选参数**:
+```json
+{
+  "compName": "",           // 合成名称
+  "color": [1, 1, 1],      // 颜色 [r, g, b]
+  "name": "Solid Layer",   // 图层名称
+  "position": [960, 540],  // 位置坐标
+  "size": [1920, 1080],   // 尺寸，默认合成尺寸
+  "isAdjustment": false   // 是否创建为调整图层
+}
+```
+
+### 🚀 **批量创建类脚本**
+
+#### `batchCreateTextLayers` - 批量创建文本图层
+**功能**: 一次性创建多个文本图层，支持不同参数配置
+**必需参数**: `textLayers` (文本图层配置数组，1-50个)
+**可选参数**: `skipErrors: true`, `validateOnly: false`
+
+**使用示例**:
+```json
+{
+  "script": "batchCreateTextLayers",
+  "parameters": {
+    "textLayers": [
+      {
+        "text": "主标题",
+        "compName": "标题合成",
+        "position": [960, 200],
+        "fontSize": 72,
+        "color": [1, 1, 1],
+        "fontFamily": "Arial Black"
+      },
+      {
+        "text": "副标题", 
+        "compName": "标题合成",
+        "position": [960, 350],
+        "fontSize": 48,
+        "color": [0.8, 0.8, 0.8]
+      }
+    ],
+    "skipErrors": true
+  }
+}
+```
+
+#### `batchCreateShapeLayers` - 批量创建形状图层
+**功能**: 批量创建不同类型的形状图层
+**必需参数**: `shapeLayers` (形状配置数组，1-50个)
+
+**使用示例**:
+```json
+{
+  "script": "batchCreateShapeLayers", 
+  "parameters": {
+    "shapeLayers": [
+      {
+        "shapeType": "rectangle",
+        "compName": "形状合成",
+        "position": [300, 200],
+        "size": [200, 100],
+        "fillColor": [1, 0, 0],
+        "name": "红色矩形"
+      },
+      {
+        "shapeType": "ellipse",
+        "position": [700, 200],
+        "size": [150, 150], 
+        "fillColor": [0, 1, 0],
+        "strokeColor": [0, 0, 1],
+        "strokeWidth": 5
+      }
+    ]
+  }
+}
+```
+
+#### `batchCreateSolidLayers` - 批量创建纯色图层
+**功能**: 批量创建纯色图层，支持普通图层和调整图层
+**必需参数**: `solidLayers` (纯色图层配置数组，1-50个)
+
+**使用示例**:
+```json
+{
+  "script": "batchCreateSolidLayers",
+  "parameters": {
+    "solidLayers": [
+      {
+        "compName": "背景合成",
+        "color": [0.1, 0.1, 0.1],
+        "name": "深色背景",
+        "size": [1920, 1080]
+      },
+      {
+        "color": [1, 0, 0],
+        "name": "红色调整层",
+        "isAdjustment": true
+      }
+    ]
+  }
+}
+```
+
+### ⚙️ **修改操作类脚本**
+
+#### `setLayerProperties` - 设置图层属性
+**功能**: 修改指定图层的各种属性
+**必需参数**: `compName` (合成名称)
+**图层识别**: `layerName` 或 `layerIndex` 二选一
+
+**可设置属性**:
+```json
+{
+  "position": [x, y],        // 位置
+  "scale": [x, y],          // 缩放百分比
+  "rotation": 0,            // 旋转角度
+  "opacity": 100,           // 透明度 (0-100)
+  "text": "新文本",          // 文本内容 (文本图层)
+  "fontSize": 72,           // 字体大小 (文本图层)
+  "fillColor": [1, 1, 1]    // 文字颜色 (文本图层)
+}
+```
+
+#### `setLayerKeyframe` - 设置关键帧
+**功能**: 为图层属性设置关键帧动画
+**必需参数**:
+```json
+{
+  "compName": "合成名称",
+  "layerIndex": 1,                    // 图层索引 (1-1000)
+  "propertyName": "Opacity",          // 属性名称
+  "timeInSeconds": 0,                 // 时间点 (秒)
+  "value": 100                        // 属性值
+}
+```
+
+**支持的属性**: `Position`, `Scale`, `Rotation`, `Opacity`, `Anchor Point`
+
+#### `setLayerExpression` - 设置表达式
+**功能**: 为图层属性添加表达式动画
+**必需参数**:
+```json
+{
+  "compName": "合成名称",
+  "layerIndex": 1,
+  "propertyName": "Position",
+  "expressionString": "wiggle(2, 30)"  // 表达式代码，空字符串移除表达式
+}
+```
+
+### 🔄 **批量修改类脚本**
+
+#### `batchSetLayerProperties` - 批量设置图层属性
+**功能**: 批量修改多个图层的属性
+**必需参数**: `layerProperties` (图层属性配置数组，1-100个)
+
+**使用示例**:
+```json
+{
+  "script": "batchSetLayerProperties",
+  "parameters": {
+    "layerProperties": [
+      {
+        "compName": "动画合成",
+        "layerIndex": 1,
+        "position": [300, 200],
+        "opacity": 80,
+        "scale": [120, 120]
+      },
+      {
+        "compName": "文本合成", 
+        "layerName": "标题",
+        "text": "新标题",
+        "fontSize": 72,
+        "fillColor": [1, 1, 1]
+      }
+    ]
+  }
+}
+```
+
+#### `batchSetLayerKeyframes` - 批量设置关键帧
+**功能**: 批量为多个图层设置关键帧动画
+**必需参数**: `keyframes` (关键帧配置数组，1-200个)
+
+**使用示例**:
+```json
+{
+  "script": "batchSetLayerKeyframes",
+  "parameters": {
+    "keyframes": [
+      {
+        "compName": "动画合成",
+        "layerIndex": 1,
+        "propertyName": "Opacity",
+        "timeInSeconds": 0,
+        "value": 0
+      },
+      {
+        "compName": "动画合成",
+        "layerIndex": 1, 
+        "propertyName": "Opacity",
+        "timeInSeconds": 1,
+        "value": 100
+      },
+      {
+        "compName": "动画合成",
+        "layerIndex": 2,
+        "propertyName": "Position",
+        "timeInSeconds": 0,
+        "value": [100, 540]
+      }
+    ]
+  }
+}
+```
+
+#### `batchSetLayerExpressions` - 批量设置表达式
+**功能**: 批量为多个图层属性添加表达式
+**必需参数**: `expressions` (表达式配置数组，1-100个)
+
+**使用示例**:
+```json
+{
+  "script": "batchSetLayerExpressions",
+  "parameters": {
+    "expressions": [
+      {
+        "compName": "动画合成",
+        "layerIndex": 1,
+        "propertyName": "Position", 
+        "expressionString": "wiggle(2, 30)"
+      },
+      {
+        "compName": "动画合成",
+        "layerIndex": 2,
+        "propertyName": "Rotation",
+        "expressionString": "time * 45"
+      }
+    ]
+  }
+}
+```
+
+### ✨ **特效操作类脚本**
+
+#### `applyEffect` - 应用单个特效
+**功能**: 为图层添加单个特效
+**必需参数**: `compName`, `layerIndex`
+**特效识别**: `effectName`, `effectMatchName` 或 `presetPath` 三选一
+
+#### `batchApplyEffects` - 批量应用特效
+**功能**: 为多个图层批量应用相同特效
+**必需参数**: `compName`, `layerIndices` (图层索引数组)
+**特效识别**: `effectTemplate` 或 `effectMatchName`
+
+#### `applyEffectTemplate` - 应用特效模板
+**功能**: 应用预定义的特效模板
+**必需参数**: `templateName`
+**可选参数**: `compName`, `layerIndex`, `customSettings`
+
+**可用模板**: `gaussian-blur`, `directional-blur`, `color-balance`, `brightness-contrast`, `glow`, `drop-shadow`, `cinematic-look`, `text-pop`
+
+#### `batchApplyEffectTemplates` - 批量应用特效模板
+**功能**: 批量为多个图层应用不同的特效模板
+**必需参数**: `effectApplications` (特效应用配置数组，1-100个)
+
+**使用示例**:
+```json
+{
+  "script": "batchApplyEffectTemplates",
+  "parameters": {
+    "effectApplications": [
+      {
+        "templateName": "glow",
+        "compName": "文本合成",
+        "layerIndex": 1,
+        "customSettings": {
+          "glow_intensity": 2.5,
+          "glow_color": [0.2, 0.6, 1.0]
+        }
+      },
+      {
+        "templateName": "drop-shadow", 
+        "compName": "文本合成",
+        "layerIndex": 1,
+        "customSettings": {
+          "shadow_distance": 8,
+          "shadow_opacity": 75
+        }
+      }
+    ]
+  }
+}
+```
+
+### 🧪 **测试调试类脚本**
+
+#### `bridgeTestEffects` - 桥接通信测试
+**功能**: 测试MCP桥接通信是否正常
+**参数**: 无需参数
+
+### 🚀 **批处理功能特性**
+
+所有批处理脚本都支持以下统一特性：
+
+#### **错误处理机制**
+- `skipErrors: true` (默认) - 跳过失败项继续处理其他项目
+- `skipErrors: false` - 遇到错误立即停止整个批处理操作
+
+#### **验证模式**
+- `validateOnly: true` - 仅验证所有参数，不执行实际操作
+- `validateOnly: false` (默认) - 执行实际的批处理操作
+
+#### **进度跟踪**
+每个批处理操作返回详细的执行结果：
+```json
+{
+  "status": "success",
+  "totalItems": 10,
+  "successful": 8,
+  "failed": 2,
+  "results": [...],     // 每个项目的详细结果
+  "errors": [...]       // 失败项目的错误信息
+}
+```
+
+#### **撤销支持**
+- 整个批处理操作包装在单个撤销组中
+- 可以一键撤销整个批处理操作的所有更改
+
+#### **性能优化**
+- 减少MCP通信开销
+- 优化After Effects脚本执行效率
+- 支持大批量操作 (最高200个关键帧) 

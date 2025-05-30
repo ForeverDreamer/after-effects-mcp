@@ -226,6 +226,113 @@ After Effects MCP uses a simplified three-tool architecture:
 - \`duration\` (number): Duration in seconds (default: 5)
 - \`isAdjustment\` (boolean): Whether to create as adjustment layer (default: false)
 
+### 🚀 Batch Creation Scripts
+
+#### \`batchCreateTextLayers\` - Batch Create Text Layers
+**Required Parameters:**
+- \`textLayers\` (array): Array of text layer configurations (1-50 items)
+
+**Optional Parameters:**
+- \`skipErrors\` (boolean): Skip errors and continue processing (default: true)
+- \`validateOnly\` (boolean): Only validate parameters without creating (default: false)
+
+**Example:**
+\`\`\`json
+{
+  "script": "batchCreateTextLayers",
+  "parameters": {
+    "textLayers": [
+      {
+        "text": "Main Title",
+        "compName": "Title Comp",
+        "position": [960, 200],
+        "fontSize": 72,
+        "color": [1, 1, 1],
+        "fontFamily": "Arial Black"
+      },
+      {
+        "text": "Subtitle",
+        "compName": "Title Comp",
+        "position": [960, 350],
+        "fontSize": 48,
+        "color": [0.8, 0.8, 0.8],
+        "fontFamily": "Arial"
+      }
+    ],
+    "skipErrors": true
+  }
+}
+\`\`\`
+
+#### \`batchCreateShapeLayers\` - Batch Create Shape Layers
+**Required Parameters:**
+- \`shapeLayers\` (array): Array of shape layer configurations (1-50 items)
+
+**Optional Parameters:**
+- \`skipErrors\` (boolean): Skip errors and continue processing (default: true)
+- \`validateOnly\` (boolean): Only validate parameters without creating (default: false)
+
+**Example:**
+\`\`\`json
+{
+  "script": "batchCreateShapeLayers",
+  "parameters": {
+    "shapeLayers": [
+      {
+        "shapeType": "rectangle",
+        "compName": "Shape Comp",
+        "position": [300, 200],
+        "size": [200, 100],
+        "fillColor": [1, 0, 0],
+        "name": "Red Rectangle"
+      },
+      {
+        "shapeType": "ellipse",
+        "compName": "Shape Comp",
+        "position": [700, 200],
+        "size": [150, 150],
+        "fillColor": [0, 1, 0],
+        "strokeColor": [0, 0, 1],
+        "strokeWidth": 5,
+        "name": "Green Circle"
+      }
+    ]
+  }
+}
+\`\`\`
+
+#### \`batchCreateSolidLayers\` - Batch Create Solid Layers
+**Required Parameters:**
+- \`solidLayers\` (array): Array of solid layer configurations (1-50 items)
+
+**Optional Parameters:**
+- \`skipErrors\` (boolean): Skip errors and continue processing (default: true)
+- \`validateOnly\` (boolean): Only validate parameters without creating (default: false)
+
+**Example:**
+\`\`\`json
+{
+  "script": "batchCreateSolidLayers",
+  "parameters": {
+    "solidLayers": [
+      {
+        "compName": "Background Comp",
+        "color": [0.1, 0.1, 0.1],
+        "name": "Dark Background",
+        "size": [1920, 1080]
+      },
+      {
+        "compName": "Background Comp",
+        "color": [1, 1, 1],
+        "name": "White Overlay",
+        "size": [800, 600],
+        "opacity": 50
+      }
+    ]
+  }
+}
+\`\`\`
+
 ### ⚙️ Modification Scripts
 
 #### \`setLayerProperties\` - Set Layer Properties
@@ -264,6 +371,125 @@ After Effects MCP uses a simplified three-tool architecture:
 - \`layerIndex\` (integer): Layer index (1-1000)
 - \`propertyName\` (string): Property name ["Position", "Scale", "Rotation", "Opacity", "Anchor Point"]
 - \`expressionString\` (string): Expression code (empty string removes expression)
+
+### 🚀 Batch Modification Scripts
+
+#### \`batchSetLayerProperties\` - Batch Set Layer Properties
+**Required Parameters:**
+- \`layerProperties\` (array): Array of layer property configurations (1-100 items)
+
+**Optional Parameters:**
+- \`skipErrors\` (boolean): Skip errors and continue processing (default: true)
+- \`validateOnly\` (boolean): Only validate parameters without applying (default: false)
+
+**Example:**
+\`\`\`json
+{
+  "script": "batchSetLayerProperties",
+  "parameters": {
+    "layerProperties": [
+      {
+        "compName": "Animation Comp",
+        "layerIndex": 1,
+        "position": [300, 200],
+        "opacity": 80,
+        "scale": [120, 120]
+      },
+      {
+        "compName": "Text Comp",
+        "layerName": "Title",
+        "text": "New Title",
+        "fontSize": 72,
+        "fillColor": [1, 1, 1]
+      }
+    ]
+  }
+}
+\`\`\`
+
+#### \`batchSetLayerKeyframes\` - Batch Set Keyframes
+**Required Parameters:**
+- \`keyframes\` (array): Array of keyframe configurations (1-200 items)
+
+**Optional Parameters:**
+- \`skipErrors\` (boolean): Skip errors and continue processing (default: true)
+- \`validateOnly\` (boolean): Only validate parameters without setting (default: false)
+
+**Example:**
+\`\`\`json
+{
+  "script": "batchSetLayerKeyframes",
+  "parameters": {
+    "keyframes": [
+      {
+        "compName": "Animation Comp",
+        "layerIndex": 1,
+        "propertyName": "Opacity",
+        "timeInSeconds": 0,
+        "value": 0
+      },
+      {
+        "compName": "Animation Comp",
+        "layerIndex": 1,
+        "propertyName": "Opacity",
+        "timeInSeconds": 1,
+        "value": 100
+      },
+      {
+        "compName": "Animation Comp",
+        "layerIndex": 2,
+        "propertyName": "Position",
+        "timeInSeconds": 0,
+        "value": [100, 540]
+      },
+      {
+        "compName": "Animation Comp",
+        "layerIndex": 2,
+        "propertyName": "Position",
+        "timeInSeconds": 2,
+        "value": [1820, 540]
+      }
+    ]
+  }
+}
+\`\`\`
+
+#### \`batchSetLayerExpressions\` - Batch Set Expressions
+**Required Parameters:**
+- \`expressions\` (array): Array of expression configurations (1-100 items)
+
+**Optional Parameters:**
+- \`skipErrors\` (boolean): Skip errors and continue processing (default: true)
+- \`validateOnly\` (boolean): Only validate parameters without applying (default: false)
+
+**Example:**
+\`\`\`json
+{
+  "script": "batchSetLayerExpressions",
+  "parameters": {
+    "expressions": [
+      {
+        "compName": "Animation Comp",
+        "layerIndex": 1,
+        "propertyName": "Position",
+        "expressionString": "wiggle(2, 30)"
+      },
+      {
+        "compName": "Animation Comp",
+        "layerIndex": 2,
+        "propertyName": "Rotation",
+        "expressionString": "time * 45"
+      },
+      {
+        "compName": "Animation Comp",
+        "layerIndex": 3,
+        "propertyName": "Position",
+        "expressionString": "wiggle(3, 15)"
+      }
+    ]
+  }
+}
+\`\`\`
 
 ### 🎭 Effects Scripts
 
@@ -305,6 +531,48 @@ After Effects MCP uses a simplified three-tool architecture:
 - \`cinematic-look\`: Cinematic Look Effect Chain
 - \`text-pop\`: Text Pop Effect Chain
 
+#### \`batchApplyEffectTemplates\` - Batch Apply Effect Templates
+**Required Parameters:**
+- \`effectApplications\` (array): Array of effect application configurations (1-100 items)
+
+**Optional Parameters:**
+- \`skipErrors\` (boolean): Skip errors and continue processing (default: true)
+- \`validateOnly\` (boolean): Only validate parameters without applying (default: false)
+
+**Example:**
+\`\`\`json
+{
+  "script": "batchApplyEffectTemplates",
+  "parameters": {
+    "effectApplications": [
+      {
+        "templateName": "glow",
+        "compName": "Text Comp",
+        "layerIndex": 1,
+        "customSettings": {
+          "glow_intensity": 2.5,
+          "glow_color": [0.2, 0.6, 1.0]
+        }
+      },
+      {
+        "templateName": "drop-shadow",
+        "compName": "Text Comp",
+        "layerIndex": 1,
+        "customSettings": {
+          "shadow_distance": 8,
+          "shadow_opacity": 75
+        }
+      },
+      {
+        "templateName": "cinematic-look",
+        "compName": "Color Comp",
+        "layerIndex": 2
+      }
+    ]
+  }
+}
+\`\`\`
+
 ### 🧪 Testing Scripts
 
 #### \`test-animation\` - Test Animation Functionality
@@ -327,13 +595,22 @@ All scripts include comprehensive parameter validation:
 - Runtime errors provide specific error location and suggestions
 - Batch operations support skipping errors to continue processing
 
+### Batch Operation Features
+- **Progress Tracking:** Detailed results for each item processed
+- **Error Recovery:** Skip individual failures and continue processing
+- **Validation Mode:** Test parameters without executing operations
+- **Undo Support:** All batch operations wrapped in single undo group
+- **Performance:** Optimized for processing multiple items efficiently
+
 ### Best Practices
 1. Prefer \`effectMatchName\` over \`effectName\`
 2. Set \`skipErrors: true\` for batch operations
-3. Confirm layer type before text layer operations
-4. Use composition names instead of indices for stability
-4. For createShapeLayer, always use \`shapeType\` parameter instead of \`shape\`
-5. For layer naming, use \`name\` parameter instead of \`layerName\``
+3. Use \`validateOnly: true\` to test complex batch configurations
+4. Confirm layer type before text layer operations
+5. Use composition names instead of indices for stability
+6. For createShapeLayer, always use \`shapeType\` parameter instead of \`shape\`
+7. For layer naming, use \`name\` parameter instead of \`layerName\`
+8. For batch operations, start with small test arrays before full deployment`
       };
 
       const content = topic === "all" 

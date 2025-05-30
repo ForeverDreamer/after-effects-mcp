@@ -306,6 +306,26 @@ export const allowedScripts: AllowedScripts = {
     estimatedTime: "Quick"
   },
   
+  // Batch creation operations
+  "batchCreateTextLayers": {
+    description: "Batch create multiple text layers",
+    category: "batch-creation",
+    requiredParams: ["textLayers"],
+    estimatedTime: "Medium"
+  },
+  "batchCreateShapeLayers": {
+    description: "Batch create multiple shape layers",
+    category: "batch-creation", 
+    requiredParams: ["shapeLayers"],
+    estimatedTime: "Medium"
+  },
+  "batchCreateSolidLayers": {
+    description: "Batch create multiple solid layers",
+    category: "batch-creation",
+    requiredParams: ["solidLayers"],
+    estimatedTime: "Medium"
+  },
+  
   // Modification operations
   "setLayerProperties": { 
     description: "Modify layer properties", 
@@ -323,6 +343,26 @@ export const allowedScripts: AllowedScripts = {
     estimatedTime: "Quick"
   },
   
+  // Batch modification operations
+  "batchSetLayerProperties": {
+    description: "Batch set properties for multiple layers",
+    category: "batch-modification",
+    requiredParams: ["layerProperties"],
+    estimatedTime: "Medium"
+  },
+  "batchSetLayerKeyframes": {
+    description: "Batch set keyframes for multiple layers",
+    category: "batch-animation",
+    requiredParams: ["keyframes"],
+    estimatedTime: "Long"
+  },
+  "batchSetLayerExpressions": {
+    description: "Batch set expressions for multiple layers",
+    category: "batch-animation",
+    requiredParams: ["expressions"],
+    estimatedTime: "Medium"
+  },
+  
   // Effects operations
   "applyEffect": { 
     description: "Apply effect", 
@@ -337,7 +377,13 @@ export const allowedScripts: AllowedScripts = {
   "batchApplyEffects": { 
     description: "Batch apply effects to multiple layers", 
     category: "effects",
-    requiredParams: ["compIndex", "layerIndices"],
+    requiredParams: ["compName", "layerIndices"],
+    estimatedTime: "Long"
+  },
+  "batchApplyEffectTemplates": {
+    description: "Batch apply effect templates to multiple layers",
+    category: "batch-effects",
+    requiredParams: ["effectApplications"],
     estimatedTime: "Long"
   },
   

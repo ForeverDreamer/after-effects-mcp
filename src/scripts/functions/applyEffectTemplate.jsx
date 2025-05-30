@@ -1,7 +1,9 @@
 // applyEffectTemplate.jsx
-// Applies predefined effect templates to layers
+// Applies predefined effect templates to layers (Refactored)
 
 //@include "utils.jsx"
+//@include "effectsCore.jsx"
+//@include "effectTemplates.jsx"
 
 // ========== 参数验证Schema ==========
 var APPLY_EFFECT_TEMPLATE_SCHEMA = {
@@ -48,7 +50,7 @@ var APPLY_EFFECT_TEMPLATE_SCHEMA = {
                 layerIndex: 1,
                 templateName: "gaussian-blur",
                 customSettings: {
-                    "blurriness": 25
+                    "Blurriness": 25
                 }
             }
         },
@@ -59,8 +61,8 @@ var APPLY_EFFECT_TEMPLATE_SCHEMA = {
                 layerIndex: 2,
                 templateName: "drop-shadow",
                 customSettings: {
-                    "opacity": 60,
-                    "distance": 15
+                    "Opacity": 60,
+                    "Distance": 15
                 }
             }
         },
@@ -77,206 +79,82 @@ var APPLY_EFFECT_TEMPLATE_SCHEMA = {
 
 function applyEffectTemplate(args) {
     try {
-        // 参数验证
-        var validation = validateParameters(args, APPLY_EFFECT_TEMPLATE_SCHEMA);
+        // 参数验证（使用增强的验证函数）
+        var validation = validateEffectParameters(args, APPLY_EFFECT_TEMPLATE_SCHEMA, function(params) {
+            // 验证模板名称
+            return validateTemplateName(params.templateName);
+        });
+        
         if (!validation.isValid) {
-            return JSON.stringify({
-                status: "error",
-                message: "Parameter validation failed",
+            return createStandardResponse("error", "Parameter validation failed", {
                 errors: validation.errors,
                 schema: APPLY_EFFECT_TEMPLATE_SCHEMA
-            }, null, 2);
+            });
         }
         
-        // 使用验证后的参数
         var params = validation.normalizedArgs;
         
-        // Find the composition using utility function
-        var compResult = getCompositionByName(params.compName);
-        if (compResult.error) {
-            return JSON.stringify({
-                status: "error",
-                message: compResult.error
-            }, null, 2);
-        }
-        var comp = compResult.composition;
-        
-        // Find the layer by index
-        var layer = comp.layer(params.layerIndex);
-        if (!layer) {
-            return JSON.stringify({
-                status: "error",
-                message: "Layer not found at index " + params.layerIndex + " in composition '" + comp.name + "'"
-            }, null, 2);
+        // 查找图层（使用核心工具函数）
+        var layerResult = findLayerInComposition(params.compName, params.layerIndex);
+        if (!layerResult.success) {
+            return createStandardResponse("error", layerResult.error);
         }
         
-        // Template definitions
-        var templates = {
-            // Blur effects
-            "gaussian-blur": {
-                effectMatchName: "ADBE Gaussian Blur 2",
-                settings: {
-                    "Blurriness": params.customSettings && params.customSettings.blurriness || 20
-                }
-            },
-            "directional-blur": {
-                effectMatchName: "ADBE Motion Blur",
-                settings: {
-                    "Direction": params.customSettings && params.customSettings.direction || 0,
-                    "Blur Length": params.customSettings && params.customSettings.length || 10
-                }
-            },
-            
-            // Color correction effects
-            "color-balance": {
-                effectMatchName: "ADBE Color Balance (HLS)",
-                settings: {
-                    "Hue": params.customSettings && params.customSettings.hue || 0,
-                    "Lightness": params.customSettings && params.customSettings.lightness || 0,
-                    "Saturation": params.customSettings && params.customSettings.saturation || 0
-                }
-            },
-            "brightness-contrast": {
-                effectMatchName: "ADBE Brightness & Contrast 2",
-                settings: {
-                    "Brightness": params.customSettings && params.customSettings.brightness || 0,
-                    "Contrast": params.customSettings && params.customSettings.contrast || 0,
-                    "Use Legacy": false
-                }
-            },
-            "curves": {
-                effectMatchName: "ADBE CurvesCustom"
-                // Curves are complex and would need special handling
-            },
-            
-            // Stylistic effects
-            "glow": {
-                effectMatchName: "ADBE Glo2",
-                settings: {
-                    "Glow Threshold": params.customSettings && params.customSettings.threshold || 50,
-                    "Glow Radius": params.customSettings && params.customSettings.radius || 15,
-                    "Glow Intensity": params.customSettings && params.customSettings.intensity || 1
-                }
-            },
-            "drop-shadow": {
-                effectMatchName: "ADBE Drop Shadow",
-                settings: {
-                    "Shadow Color": params.customSettings && params.customSettings.color || [0, 0, 0, 1],
-                    "Opacity": params.customSettings && params.customSettings.opacity || 50,
-                    "Direction": params.customSettings && params.customSettings.direction || 135,
-                    "Distance": params.customSettings && params.customSettings.distance || 10,
-                    "Softness": params.customSettings && params.customSettings.softness || 10
-                }
-            },
-            
-            // Common effect chains
-            "cinematic-look": {
-                effects: [
-                    {
-                        effectMatchName: "ADBE Curves",
-                        settings: {} // Would need special handling
-                    },
-                    {
-                        effectMatchName: "ADBE Vibrance",
-                        settings: {
-                            "Vibrance": 15,
-                            "Saturation": -5
-                        }
-                    },
-                    {
-                        effectMatchName: "ADBE Vignette",
-                        settings: {
-                            "Amount": 15,
-                            "Roundness": 50,
-                            "Feather": 40
-                        }
-                    }
-                ]
-            },
-            "text-pop": {
-                effects: [
-                    {
-                        effectMatchName: "ADBE Drop Shadow",
-                        settings: {
-                            "Shadow Color": [0, 0, 0, 1],
-                            "Opacity": 75,
-                            "Distance": 5,
-                            "Softness": 10
-                        }
-                    },
-                    {
-                        effectMatchName: "ADBE Glo2",
-                        settings: {
-                            "Glow Threshold": 50,
-                            "Glow Radius": 10,
-                            "Glow Intensity": 1.5
-                        }
-                    }
-                ]
-            }
-        };
+        var comp = layerResult.composition;
+        var layer = layerResult.layer;
         
-        // Check if the requested template exists
-        var template = templates[params.templateName];
-        if (!template) {
-            var availableTemplates = Object.keys(templates).join(", ");
-            return JSON.stringify({
-                status: "error",
-                message: "Template '" + params.templateName + "' not found. Available templates: " + availableTemplates
-            }, null, 2);
+        // 获取模板信息
+        var templateResult = getEffectTemplate(params.templateName);
+        if (!templateResult.success) {
+            return createStandardResponse("error", templateResult.error, {
+                availableTemplates: templateResult.availableTemplates
+            });
         }
         
+        var template = templateResult.template;
         var appliedEffects = [];
         
-        // Apply single effect or multiple effects based on template structure
-        if (template.effectMatchName) {
-            // Single effect template
-            var effect = layer.Effects.addProperty(template.effectMatchName);
+        // 应用单个特效或特效链
+        if (template.type === "single") {
+            // 合并设置
+            var finalSettings = mergeTemplateSettings(template.defaultSettings, params.customSettings);
             
-            // Apply settings
-            for (var propName in template.settings) {
-                try {
-                    var property = effect.property(propName);
-                    if (property) {
-                        property.setValue(template.settings[propName]);
-                    }
-                } catch (e) {
-                    $.writeln("Warning: Could not set " + propName + " on effect " + effect.name + ": " + e);
-                }
+            var effectResult = applySingleEffect(layer, {
+                effectMatchName: template.effectMatchName,
+                effectSettings: finalSettings
+            });
+            
+            if (!effectResult.success) {
+                return createStandardResponse("error", effectResult.error);
             }
             
-            appliedEffects.push({
-                name: effect.name,
-                matchName: effect.matchName
-            });
-        } else if (template.effects) {
-            // Multiple effects template
+            appliedEffects.push(effectResult.effect);
+            
+        } else if (template.type === "chain") {
+            // 应用特效链
             for (var i = 0; i < template.effects.length; i++) {
-                var effectData = template.effects[i];
-                var effect = layer.Effects.addProperty(effectData.effectMatchName);
+                var effectConfig = template.effects[i];
+                var finalSettings = mergeTemplateSettings(effectConfig.defaultSettings, params.customSettings);
                 
-                // Apply settings
-                for (var propName in effectData.settings) {
-                    try {
-                        var property = effect.property(propName);
-                        if (property) {
-                            property.setValue(effectData.settings[propName]);
-                        }
-                    } catch (e) {
-                        $.writeln("Warning: Could not set " + propName + " on effect " + effect.name + ": " + e);
-                    }
+                var effectResult = applySingleEffect(layer, {
+                    effectMatchName: effectConfig.effectMatchName,
+                    effectSettings: finalSettings
+                });
+                
+                if (!effectResult.success) {
+                    return createStandardResponse("error", "Failed to apply effect " + (i + 1) + " in chain: " + effectResult.error);
                 }
                 
-                appliedEffects.push({
-                    name: effect.name,
-                    matchName: effect.matchName
-                });
+                appliedEffects.push(effectResult.effect);
             }
         }
         
-        return JSON.stringify({
-            status: "success",
-            message: "Effect template '" + params.templateName + "' applied successfully",
+        return createStandardResponse("success", "Effect template '" + params.templateName + "' applied successfully", {
+            template: {
+                name: params.templateName,
+                type: template.type,
+                description: template.description
+            },
             appliedEffects: appliedEffects,
             layer: {
                 name: layer.name,
@@ -285,11 +163,9 @@ function applyEffectTemplate(args) {
             composition: {
                 name: comp.name
             }
-        }, null, 2);
+        });
+        
     } catch (error) {
-        return JSON.stringify({
-            status: "error",
-            message: error.toString()
-        }, null, 2);
+        return createStandardResponse("error", "Unexpected error: " + error.toString());
     }
 } 
