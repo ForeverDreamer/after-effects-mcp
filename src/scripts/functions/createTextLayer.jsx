@@ -14,7 +14,7 @@ var CREATE_TEXT_LAYER_SCHEMA = {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
         text: {
             type: "string",
@@ -27,13 +27,13 @@ var CREATE_TEXT_LAYER_SCHEMA = {
             type: "array",
             description: "文本位置 [x, y]",
             example: [960, 540],
-            default: [960, 540]
+            "default": [960, 540]
         },
         fontSize: {
             type: "number",
             description: "字体大小（像素）",
             example: 72,
-            default: 72,
+            "default": 72,
             min: 1,
             max: 500
         },
@@ -41,34 +41,34 @@ var CREATE_TEXT_LAYER_SCHEMA = {
             type: "array",
             description: "文本颜色 [r, g, b] (0-1范围)",
             example: [1, 1, 1],
-            default: [1, 1, 1]
+            "default": [1, 1, 1]
         },
         startTime: {
             type: "number",
             description: "开始时间（秒）",
             example: 0,
-            default: 0,
+            "default": 0,
             min: 0
         },
         duration: {
             type: "number",
             description: "持续时间（秒，0表示到合成结束）",
             example: 5,
-            default: 5,
+            "default": 5,
             min: 0
         },
         fontFamily: {
             type: "string",
             description: "字体名称",
             example: "Arial",
-            default: "Arial"
+            "default": "Arial"
         },
         alignment: {
             type: "string",
             description: "文本对齐方式",
             example: "center",
-            default: "center",
-            enum: ["left", "center", "right"]
+            "default": "center",
+            "enum": ["left", "center", "right"]
         }
     },
     examples: [

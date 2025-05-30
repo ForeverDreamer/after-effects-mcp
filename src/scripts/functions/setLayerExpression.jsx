@@ -11,20 +11,19 @@ var SET_LAYER_EXPRESSION_SCHEMA = {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
         layerIndex: {
             type: "integer",
-            description: "图层索引（1开始）",
+            description: "图层索引（1-based）",
             example: 1,
-            min: 1,
-            max: 1000
+            min: 1
         },
         propertyName: {
             type: "string",
             description: "属性名称",
             example: "Position",
-            enum: ["Position", "Scale", "Rotation", "Opacity", "Anchor Point"]
+            "enum": ["Position", "Scale", "Rotation", "Opacity", "Anchor Point"]
         },
         expressionString: {
             type: "string",

@@ -14,25 +14,25 @@ var GET_LAYER_INFO_SCHEMA = {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
-        includeDetails: {
+        includeProperties: {
             type: "boolean",
-            description: "是否包含详细图层属性",
+            description: "是否包含图层属性详情",
             example: true,
-            default: true
+            "default": true
         },
-        includeTransform: {
+        includeEffects: {
             type: "boolean",
-            description: "是否包含变换属性信息",
-            example: true,
-            default: false
+            description: "是否包含特效信息",
+            example: false,
+            "default": false
         },
-        layerTypes: {
+        layerIndices: {
             type: "array",
-            description: "筛选特定类型的图层（空数组返回所有类型）",
-            example: ["text", "shape", "solid"],
-            default: []
+            description: "指定图层索引数组（空数组获取所有图层）",
+            example: [1, 2, 3],
+            "default": []
         }
     },
     examples: [
@@ -40,22 +40,22 @@ var GET_LAYER_INFO_SCHEMA = {
             name: "获取活动合成图层基本信息",
             args: {
                 compName: "",
-                includeDetails: false
+                includeProperties: false
             }
         },
         {
             name: "获取指定合成详细图层信息",
             args: {
                 compName: "Main Comp",
-                includeDetails: true,
-                includeTransform: true
+                includeProperties: true,
+                includeEffects: true
             }
         },
         {
             name: "筛选文本图层",
             args: {
                 compName: "Text Comp",
-                layerTypes: ["text"]
+                layerIndices: [1, 2]
             }
         }
     ]
@@ -120,7 +120,7 @@ function getLayerInfo(args) {
             var layerType = getLayerType(layer);
             
             // Filter by layer types if specified
-            if (params.layerTypes.length > 0 && params.layerTypes.indexOf(layerType) === -1) {
+            if (params.layerIndices.length > 0 && params.layerIndices.indexOf(i) === -1) {
                 continue;
             }
             
@@ -138,7 +138,7 @@ function getLayerInfo(args) {
             };
             
             // Add detailed information if requested
-            if (params.includeDetails) {
+            if (params.includeProperties) {
                 layerInfo.details = {
                     hasVideo: layer.hasVideo,
                     hasAudio: layer.hasAudio,
@@ -192,7 +192,7 @@ function getLayerInfo(args) {
             }
             
             // Add transform properties if requested
-            if (params.includeTransform) {
+            if (params.includeEffects) {
                 try {
                     var transform = layer.property("Transform");
                     layerInfo.transform = {

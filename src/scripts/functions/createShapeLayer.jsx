@@ -9,50 +9,49 @@ var CREATE_SHAPE_LAYER_SCHEMA = {
     name: "createShapeLayer",
     description: "在指定合成中创建形状图层",
     category: "creation",
-    required: [],
+    required: ["shape"],
     properties: {
         compName: {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
-        shapeType: {
+        shape: {
             type: "string",
             description: "形状类型",
             example: "rectangle",
-            default: "rectangle",
-            enum: ["rectangle", "ellipse", "polygon", "star"]
+            "enum": ["rectangle", "ellipse", "polygon", "star"]
         },
         position: {
             type: "array",
             description: "形状位置 [x, y]",
             example: [960, 540],
-            default: [960, 540]
+            "default": [960, 540]
         },
         size: {
             type: "array",
             description: "形状大小 [width, height]",
             example: [200, 200],
-            default: [200, 200]
+            "default": [200, 200]
         },
         fillColor: {
             type: "array",
             description: "填充颜色 [r, g, b] (0-1范围)",
             example: [1, 0, 0],
-            default: [1, 0, 0]
+            "default": [1, 0, 0]
         },
         strokeColor: {
             type: "array",
             description: "描边颜色 [r, g, b] (0-1范围)",
             example: [0, 0, 0],
-            default: [0, 0, 0]
+            "default": [0, 0, 0]
         },
         strokeWidth: {
             type: "number",
-            description: "描边宽度（0表示无描边）",
+            description: "描边宽度（像素）",
             example: 2,
-            default: 0,
+            "default": 0,
             min: 0,
             max: 100
         },
@@ -60,30 +59,30 @@ var CREATE_SHAPE_LAYER_SCHEMA = {
             type: "number",
             description: "开始时间（秒）",
             example: 0,
-            default: 0,
+            "default": 0,
             min: 0
         },
         duration: {
             type: "number",
             description: "持续时间（秒，0表示到合成结束）",
             example: 5,
-            default: 5,
+            "default": 5,
             min: 0
         },
-        name: {
+        layerName: {
             type: "string",
             description: "图层名称",
             example: "My Shape",
-            default: "Shape Layer",
+            "default": "Shape Layer",
             maxLength: 255
         },
-        points: {
-            type: "integer",
-            description: "多边形/星形的顶点数",
-            example: 5,
-            default: 5,
-            min: 3,
-            max: 20
+        cornerRadius: {
+            type: "number",
+            description: "圆角半径（仅适用于矩形）",
+            example: 10,
+            "default": 5,
+            min: 0,
+            max: 1000
         }
     },
     examples: [
@@ -91,17 +90,17 @@ var CREATE_SHAPE_LAYER_SCHEMA = {
             name: "创建矩形形状",
             args: {
                 compName: "Main Comp",
-                shapeType: "rectangle",
+                shape: "rectangle",
                 size: [300, 200],
                 fillColor: [0, 1, 0],
-                name: "Green Rectangle"
+                layerName: "Green Rectangle"
             }
         },
         {
             name: "创建带描边的圆形",
             args: {
                 compName: "Shape Comp",
-                shapeType: "ellipse",
+                shape: "ellipse",
                 size: [150, 150],
                 fillColor: [1, 1, 0],
                 strokeColor: [0, 0, 1],
@@ -112,8 +111,7 @@ var CREATE_SHAPE_LAYER_SCHEMA = {
             name: "创建六边形",
             args: {
                 compName: "Polygon Comp",
-                shapeType: "polygon",
-                points: 6,
+                shape: "polygon",
                 size: [180, 180],
                 fillColor: [1, 0, 1]
             }
@@ -149,7 +147,7 @@ function createShapeLayer(args) {
         
         // Create a shape layer
         var shapeLayer = comp.layers.addShape();
-        shapeLayer.name = params.name;
+        shapeLayer.name = params.layerName;
         
         // Get the root content property group
         var contents = shapeLayer.property("Contents");
@@ -161,20 +159,20 @@ function createShapeLayer(args) {
         
         // Add the appropriate shape path based on type TO THE GROUP'S CONTENTS
         var shapePathProperty;
-        if (params.shapeType === "rectangle") {
+        if (params.shape === "rectangle") {
             shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Rect");
             var rectSizeProp = shapePathProperty.property("Size");
             rectSizeProp.setValue(params.size);
-        } else if (params.shapeType === "ellipse") {
+        } else if (params.shape === "ellipse") {
             shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Ellipse");
             var ellipseSizeProp = shapePathProperty.property("Size");
             ellipseSizeProp.setValue(params.size);
-        } else if (params.shapeType === "polygon" || params.shapeType === "star") {
+        } else if (params.shape === "polygon" || params.shape === "star") {
             shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Star");
-            shapePathProperty.property("Type").setValue(params.shapeType === "polygon" ? 1 : 2);
+            shapePathProperty.property("Type").setValue(params.shape === "polygon" ? 1 : 2);
             shapePathProperty.property("Points").setValue(params.points);
             shapePathProperty.property("Outer Radius").setValue(params.size[0] / 2);
-            if (params.shapeType === "star") {
+            if (params.shape === "star") {
                 shapePathProperty.property("Inner Radius").setValue(params.size[0] / 3);
             }
         }
@@ -209,7 +207,7 @@ function createShapeLayer(args) {
                 name: shapeLayer.name,
                 index: shapeLayer.index,
                 type: "shape",
-                shapeType: params.shapeType,
+                shapeType: params.shape,
                 inPoint: shapeLayer.inPoint,
                 outPoint: shapeLayer.outPoint,
                 position: shapeLayer.property("Position").value

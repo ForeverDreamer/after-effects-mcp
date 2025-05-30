@@ -14,13 +14,13 @@ var APPLY_EFFECT_TEMPLATE_SCHEMA = {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
         layerIndex: {
             type: "integer",
             description: "图层索引（1开始）",
             example: 1,
-            default: 1,
+            "default": 1,
             min: 1,
             max: 1000
         },
@@ -28,7 +28,7 @@ var APPLY_EFFECT_TEMPLATE_SCHEMA = {
             type: "string",
             description: "特效模板名称",
             example: "gaussian-blur",
-            enum: [
+            "enum": [
                 "gaussian-blur", "directional-blur", "color-balance", 
                 "brightness-contrast", "curves", "glow", "drop-shadow",
                 "cinematic-look", "text-pop"

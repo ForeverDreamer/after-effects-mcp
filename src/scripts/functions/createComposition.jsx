@@ -21,7 +21,7 @@ var CREATE_COMPOSITION_SCHEMA = {
             type: "integer",
             description: "合成宽度（像素）",
             example: 1920,
-            default: 1920,
+            "default": 1920,
             min: 1,
             max: 8192
         },
@@ -29,7 +29,7 @@ var CREATE_COMPOSITION_SCHEMA = {
             type: "integer", 
             description: "合成高度（像素）",
             example: 1080,
-            default: 1080,
+            "default": 1080,
             min: 1,
             max: 8192
         },
@@ -37,7 +37,7 @@ var CREATE_COMPOSITION_SCHEMA = {
             type: "number",
             description: "像素宽高比",
             example: 1.0,
-            default: 1.0,
+            "default": 1.0,
             min: 0.1,
             max: 10.0
         },
@@ -45,7 +45,7 @@ var CREATE_COMPOSITION_SCHEMA = {
             type: "number",
             description: "合成持续时间（秒）",
             example: 10.0,
-            default: 10.0,
+            "default": 10.0,
             min: 0.1,
             max: 3600.0
         },
@@ -53,7 +53,7 @@ var CREATE_COMPOSITION_SCHEMA = {
             type: "number",
             description: "帧率（fps）",
             example: 30.0,
-            default: 30.0,
+            "default": 30.0,
             min: 1.0,
             max: 120.0
         },

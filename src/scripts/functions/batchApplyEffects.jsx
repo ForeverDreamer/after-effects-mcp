@@ -11,7 +11,7 @@ var BATCH_APPLY_EFFECTS_SCHEMA = {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
         layerIndices: {
             type: "array",
@@ -23,7 +23,7 @@ var BATCH_APPLY_EFFECTS_SCHEMA = {
             type: "string",
             description: "特效模板名称",
             example: "Drop Shadow",
-            enum: ["Glow", "Drop Shadow", "Blur", "Sharpen", "Color Correction"]
+            "enum": ["Glow", "Drop Shadow", "Blur", "Sharpen", "Color Correction"]
         },
         effectMatchName: {
             type: "string",
@@ -39,7 +39,7 @@ var BATCH_APPLY_EFFECTS_SCHEMA = {
             type: "boolean",
             description: "是否跳过错误继续处理其他图层",
             example: true,
-            default: true
+            "default": true
         }
     },
     validation: "effectTemplate或effectMatchName必须提供其中一个",

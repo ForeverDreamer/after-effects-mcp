@@ -14,14 +14,14 @@ var LIST_COMPOSITIONS_SCHEMA = {
             type: "boolean",
             description: "是否包含详细信息",
             example: true,
-            default: true
+            "default": true
         },
         sortBy: {
             type: "string",
-            description: "排序方式",
+            description: "排序字段",
             example: "name",
-            default: "name",
-            enum: ["name", "duration", "created", "size"]
+            "default": "name",
+            "enum": ["name", "duration", "created", "size"]
         }
     },
     examples: [

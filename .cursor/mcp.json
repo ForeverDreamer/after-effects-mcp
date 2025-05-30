@@ -10,6 +10,10 @@
         "env": {
           "TAVILY_API_KEY": "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"
         }
+      },
+      "AfterEffectsMCP": {
+        "command": "node",
+        "args": ["D:\\data_files\\mcps\\after-effects-mcp\\build\\index.js"]
       }
     } 
   }

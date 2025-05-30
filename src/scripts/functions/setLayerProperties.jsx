@@ -14,7 +14,7 @@ var SET_LAYER_PROPERTIES_SCHEMA = {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
         layerName: {
             type: "string",

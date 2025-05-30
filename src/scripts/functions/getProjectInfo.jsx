@@ -14,27 +14,47 @@ var GET_PROJECT_INFO_SCHEMA = {
             type: "boolean",
             description: "是否包含项目素材列表",
             example: true,
-            default: true
+            "default": true
         },
         maxItems: {
             type: "integer",
             description: "返回的最大素材数量",
             example: 50,
-            default: 50,
+            "default": 50,
             min: 1,
             max: 1000
         },
         includeCompositions: {
             type: "boolean",
-            description: "是否包含合成详细信息",
+            description: "是否包含合成列表",
             example: true,
-            default: false
+            "default": true
+        },
+        maxCompositions: {
+            type: "integer",
+            description: "最大返回合成数量",
+            example: 10,
+            "default": 50,
+            min: 1,
+            max: 1000
+        },
+        includeFootage: {
+            type: "boolean",
+            description: "是否包含素材列表",
+            example: false,
+            "default": false
+        },
+        includeMetadata: {
+            type: "boolean",
+            description: "是否包含项目元数据",
+            example: false,
+            "default": false
         },
         includeSystemInfo: {
             type: "boolean",
             description: "是否包含系统和应用信息",
             example: false,
-            default: false
+            "default": false
         }
     },
     examples: [

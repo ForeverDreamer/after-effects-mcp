@@ -14,7 +14,7 @@ var APPLY_EFFECT_SCHEMA = {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
         layerIndex: {
             type: "integer",

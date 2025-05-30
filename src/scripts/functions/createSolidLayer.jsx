@@ -14,51 +14,52 @@ var CREATE_SOLID_LAYER_SCHEMA = {
             type: "string",
             description: "合成名称（空字符串使用活动合成）",
             example: "Main Comp",
-            default: ""
+            "default": ""
         },
         color: {
             type: "array",
             description: "纯色颜色 [r, g, b] (0-1范围)",
             example: [1, 1, 1],
-            default: [1, 1, 1]
+            "default": [1, 1, 1]
         },
         name: {
             type: "string",
             description: "图层名称",
-            example: "Background Solid",
-            default: "Solid Layer",
+            example: "Background",
+            "default": "Solid Layer",
             maxLength: 255
+        },
+        size: {
+            type: "array",
+            description: "图层尺寸 [width, height]（空数组使用合成尺寸）",
+            example: [1920, 1080],
+            "default": [960, 540]
         },
         position: {
             type: "array",
             description: "图层位置 [x, y]",
             example: [960, 540],
-            default: [960, 540]
-        },
-        size: {
-            type: "array",
-            description: "图层大小 [width, height]（空则使用合成尺寸）",
-            example: [1920, 1080]
+            "default": [960, 540]
         },
         startTime: {
             type: "number",
             description: "开始时间（秒）",
             example: 0,
-            default: 0,
+            "default": 0,
             min: 0
         },
         duration: {
             type: "number",
             description: "持续时间（秒，0表示到合成结束）",
             example: 5,
-            default: 5,
+            "default": 5,
             min: 0
         },
         isAdjustment: {
             type: "boolean",
-            description: "是否创建为调节图层",
+            description: "是否为调整图层",
             example: false,
-            default: false
+            "default": false
         }
     },
     examples: [
