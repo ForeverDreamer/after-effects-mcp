@@ -2,6 +2,7 @@
 // Batch create multiple shape layers in compositions
 
 //@include "utils.jsx"
+//@include "effectsCore.jsx"
 //@include "createShapeLayer.jsx"
 
 // ========== 参数验证Schema ==========
@@ -102,128 +103,59 @@ var BATCH_CREATE_SHAPE_LAYERS_SCHEMA = {
 };
 
 function batchCreateShapeLayers(args) {
-    try {
-        // 参数验证
-        var validation = validateParameters(args, BATCH_CREATE_SHAPE_LAYERS_SCHEMA);
-        if (!validation.isValid) {
-            return JSON.stringify({
-                status: "error",
-                message: "Parameter validation failed",
-                errors: validation.errors,
-                schema: BATCH_CREATE_SHAPE_LAYERS_SCHEMA
-            }, null, 2);
-        }
-        
-        var params = validation.normalizedArgs;
-        var shapeLayers = params.shapeLayers;
-        var skipErrors = params.skipErrors;
-        var validateOnly = params.validateOnly;
-        
-        var results = {
-            status: "success",
-            message: validateOnly ? "Validation completed" : "Batch shape layer creation completed",
-            totalLayers: shapeLayers.length,
-            successful: 0,
-            failed: 0,
-            results: [],
-            errors: []
-        };
-        
-        // 开始撤销组
-        if (!validateOnly) {
-            app.beginUndoGroup("Batch Create Shape Layers");
-        }
-        
-        try {
-            // 处理每个形状图层配置
-            for (var i = 0; i < shapeLayers.length; i++) {
-                var layerConfig = shapeLayers[i];
-                var layerResult = {
-                    index: i + 1,
-                    config: layerConfig,
-                    status: "pending"
-                };
-                
-                try {
-                    // 验证必需参数
-                    if (!layerConfig.shapeType || layerConfig.shapeType === "") {
-                        throw new Error("Shape type is required");
-                    }
-                    
-                    var validShapeTypes = ["rectangle", "ellipse", "polygon", "star"];
-                    if (validShapeTypes.indexOf(layerConfig.shapeType) === -1) {
-                        throw new Error("Invalid shape type: " + layerConfig.shapeType);
-                    }
-                    
-                    if (validateOnly) {
-                        // 仅验证模式，检查参数有效性
-                        var testValidation = validateParameters(layerConfig, CREATE_SHAPE_LAYER_SCHEMA);
-                        if (!testValidation.isValid) {
-                            throw new Error("Invalid parameters: " + testValidation.errors.join(", "));
-                        }
-                        layerResult.status = "valid";
-                        results.successful++;
-                    } else {
-                        // 实际创建形状图层
-                        var createResult = createShapeLayer(layerConfig);
-                        var parsedResult = JSON.parse(createResult);
-                        
-                        if (parsedResult.status === "success") {
-                            layerResult.status = "success";
-                            layerResult.layer = parsedResult.layer;
-                            results.successful++;
-                        } else {
-                            throw new Error(parsedResult.message || "Failed to create shape layer");
-                        }
-                    }
-                } catch (error) {
-                    layerResult.status = "error";
-                    layerResult.error = error.toString();
-                    results.failed++;
-                    results.errors.push({
-                        index: i + 1,
-                        config: layerConfig,
-                        error: error.toString()
-                    });
-                    
-                    if (!skipErrors) {
-                        // 如果不跳过错误，立即终止
-                        results.status = "error";
-                        results.message = "Batch operation failed at layer " + (i + 1) + ": " + error.toString();
-                        break;
-                    }
+    // 参数验证
+    var validation = validateParameters(args, BATCH_CREATE_SHAPE_LAYERS_SCHEMA);
+    if (!validation.isValid) {
+        return createStandardResponse("error", "Parameter validation failed", {
+            errors: validation.errors,
+            schema: BATCH_CREATE_SHAPE_LAYERS_SCHEMA
+        });
+    }
+    
+    var params = validation.normalizedArgs;
+    
+    // 使用统一的批量处理框架
+    return processBatchOperation(
+        params.shapeLayers,
+        function(layerConfig, index, validateMode) {
+            try {
+                // 验证必需参数
+                if (!layerConfig.shapeType || layerConfig.shapeType === "") {
+                    throw new Error("Shape type is required");
                 }
                 
-                results.results.push(layerResult);
+                var validShapeTypes = ["rectangle", "ellipse", "polygon", "star"];
+                if (validShapeTypes.indexOf(layerConfig.shapeType) === -1) {
+                    throw new Error("Invalid shape type: " + layerConfig.shapeType);
+                }
+                
+                if (validateMode) {
+                    // 仅验证模式，检查参数有效性
+                    var testValidation = validateParameters(layerConfig, CREATE_SHAPE_LAYER_SCHEMA);
+                    if (!testValidation.isValid) {
+                        throw new Error("Invalid parameters: " + testValidation.errors.join(", "));
+                    }
+                    return { success: true, result: { validated: true } };
+                } else {
+                    // 实际创建形状图层
+                    var createResult = createShapeLayer(layerConfig);
+                    var parsedResult = JSON.parse(createResult);
+                    
+                    if (parsedResult.status === "success") {
+                        return { success: true, result: parsedResult.layer };
+                    } else {
+                        throw new Error(parsedResult.message || "Failed to create shape layer");
+                    }
+                }
+            } catch (error) {
+                return { success: false, error: error.toString() };
             }
-            
-            // 设置最终状态
-            if (results.failed > 0 && results.successful === 0) {
-                results.status = "error";
-                results.message = "All shape layer operations failed";
-            } else if (results.failed > 0) {
-                results.status = "partial";
-                results.message = "Batch operation completed with " + results.failed + " errors";
-            }
-            
-        } finally {
-            if (!validateOnly) {
-                app.endUndoGroup();
-            }
+        },
+        {
+            skipErrors: params.skipErrors,
+            validateOnly: params.validateOnly,
+            operationName: "Batch Create Shape Layers",
+            itemName: "shape layer"
         }
-        
-        return JSON.stringify(results, null, 2);
-        
-    } catch (error) {
-        if (!validateOnly) {
-            try { app.endUndoGroup(); } catch (e) {}
-        }
-        return JSON.stringify({
-            status: "error",
-            message: "Batch create shape layers failed: " + error.toString(),
-            details: {
-                line: error.line || "unknown"
-            }
-        }, null, 2);
-    }
+    );
 } 

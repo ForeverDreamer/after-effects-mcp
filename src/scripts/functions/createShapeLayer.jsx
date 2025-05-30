@@ -1,8 +1,8 @@
 // createShapeLayer.jsx
 // Creates a new shape layer in the specified composition
 
-// Import utility functions
 //@include "utils.jsx"
+//@include "layerOperations.jsx"
 
 // ========== 参数验证Schema ==========
 var CREATE_SHAPE_LAYER_SCHEMA = {
@@ -129,198 +129,20 @@ var CREATE_SHAPE_LAYER_SCHEMA = {
 };
 
 function createShapeLayer(args) {
-    try {
-        // 参数验证
-        var validation = validateParameters(args, CREATE_SHAPE_LAYER_SCHEMA);
-        if (!validation.isValid) {
-            return JSON.stringify({
-                status: "error",
-                message: "Parameter validation failed",
-                errors: validation.errors,
-                schema: CREATE_SHAPE_LAYER_SCHEMA
-            }, null, 2);
-        }
-        
-        // 使用验证后的参数
-        var params = validation.normalizedArgs;
-        
-        // Find the composition using utility function
-        var compResult = getCompositionByName(params.compName);
-        if (compResult.error) {
-            return JSON.stringify({
-                status: "error",
-                message: compResult.error
-            }, null, 2);
-        }
-        var comp = compResult.composition;
-        
-        // 开始撤销组，避免操作过程中的问题
-        app.beginUndoGroup("Create Shape Layer");
-        
-        try {
-            // Create a shape layer
-            var shapeLayer = comp.layers.addShape();
-            shapeLayer.name = params.name;
-            
-            // Get the root content property group
-            var contents = shapeLayer.property("Contents");
-            
-            // Add a shape group
-            var shapeGroup = contents.addProperty("ADBE Vector Group");
-            var groupContents = shapeGroup.property("Contents");
-            
-            // Add the appropriate shape path based on type
-            var shapePathProperty;
-            if (params.shapeType === "rectangle") {
-                shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Rect");
-                var rectSizeProp = shapePathProperty.property("Size");
-                if (rectSizeProp) {
-                    rectSizeProp.setValue(params.size);
-                }
-            } else if (params.shapeType === "ellipse") {
-                shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Ellipse");
-                var ellipseSizeProp = shapePathProperty.property("Size");
-                if (ellipseSizeProp) {
-                    ellipseSizeProp.setValue(params.size);
-                }
-            } else if (params.shapeType === "polygon" || params.shapeType === "star") {
-                // 简化的星形/多边形创建，避免复杂属性操作
-                try {
-                    shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Star");
-                    
-                    // 基本设置，避免复杂的属性链操作
-                    if (shapePathProperty) {
-                        // 简单的属性设置，避免过于复杂的操作
-                        var basicProps = {
-                            points: params.points || 5,
-                            outerRadius: (params.size[0] || 200) / 2,
-                            type: params.shapeType === "polygon" ? 1 : 2
-                        };
-                        
-                        // 安全的属性设置
-                        try {
-                            var pointsProp = shapePathProperty.property("ADBE Vector Star Points");
-                            if (pointsProp && pointsProp.canSetValue) {
-                                pointsProp.setValue(basicProps.points);
-                            }
-                        } catch (e) {}
-                        
-                        try {
-                            var typeProp = shapePathProperty.property("ADBE Vector Star Type");
-                            if (typeProp && typeProp.canSetValue) {
-                                typeProp.setValue(basicProps.type);
-                            }
-                        } catch (e) {}
-                        
-                        try {
-                            var outerProp = shapePathProperty.property("ADBE Vector Star Outer Radius");
-                            if (outerProp && outerProp.canSetValue) {
-                                outerProp.setValue(basicProps.outerRadius);
-                            }
-                        } catch (e) {}
-                        
-                        // 只有在明确是星形时才设置内半径
-                        if (params.shapeType === "star") {
-                            try {
-                                var innerProp = shapePathProperty.property("ADBE Vector Star Inner Radius");
-                                if (innerProp && innerProp.canSetValue) {
-                                    innerProp.setValue(basicProps.outerRadius * 0.4);
-                                }
-                            } catch (e) {}
-                        }
-                    }
-                } catch (starError) {
-                    // 如果星形创建完全失败，创建一个简单的椭圆作为替代
-                    try {
-                        groupContents.removeProperty(shapePathProperty.propertyIndex);
-                    } catch (e) {}
-                    
-                    shapePathProperty = groupContents.addProperty("ADBE Vector Shape - Ellipse");
-                    var fallbackSizeProp = shapePathProperty.property("Size");
-                    if (fallbackSizeProp) {
-                        fallbackSizeProp.setValue(params.size);
-                    }
-                }
-            }
-            
-            // Add fill
-            var fill = groupContents.addProperty("ADBE Vector Graphic - Fill");
-            if (fill) {
-                var fillColorProp = fill.property("Color");
-                var fillOpacityProp = fill.property("Opacity");
-                if (fillColorProp) {
-                    fillColorProp.setValue(params.fillColor);
-                }
-                if (fillOpacityProp) {
-                    fillOpacityProp.setValue(100);
-                }
-            }
-            
-            // Add stroke if width > 0
-            if (params.strokeWidth > 0) {
-                var stroke = groupContents.addProperty("ADBE Vector Graphic - Stroke");
-                if (stroke) {
-                    var strokeColorProp = stroke.property("Color");
-                    var strokeWidthProp = stroke.property("Stroke Width");
-                    var strokeOpacityProp = stroke.property("Opacity");
-                    
-                    if (strokeColorProp) {
-                        strokeColorProp.setValue(params.strokeColor);
-                    }
-                    if (strokeWidthProp) {
-                        strokeWidthProp.setValue(params.strokeWidth);
-                    }
-                    if (strokeOpacityProp) {
-                        strokeOpacityProp.setValue(100);
-                    }
-                }
-            }
-            
-            // Set layer's main transform properties
-            var positionProp = shapeLayer.property("Position");
-            if (positionProp) {
-                positionProp.setValue(params.position);
-            }
-            
-            // Set timing
-            shapeLayer.startTime = params.startTime;
-            if (params.duration > 0) {
-                shapeLayer.outPoint = params.startTime + params.duration;
-            }
-            
-            // 结束撤销组
-            app.endUndoGroup();
-            
-            // Return success with layer details
-            return JSON.stringify({
-                status: "success",
-                message: "Shape layer created successfully",
-                layer: {
-                    name: shapeLayer.name,
-                    index: shapeLayer.index,
-                    type: "shape",
-                    shapeType: params.shapeType,
-                    inPoint: shapeLayer.inPoint,
-                    outPoint: shapeLayer.outPoint,
-                    position: positionProp ? positionProp.value : params.position
-                }
-            }, null, 2);
-            
-        } catch (innerError) {
-            // 确保撤销组结束
-            app.endUndoGroup();
-            throw innerError;
-        }
-        
-    } catch (error) {
-        // Return error message with safe string handling
-        var errorMessage = error.toString().replace(/[\r\n\t]/g, " ");
-        return JSON.stringify({
-            status: "error",
-            message: "Shape layer creation failed: " + errorMessage,
-            shapeType: args.shapeType || "unknown"
-        }, null, 2);
+    // 参数验证
+    var validation = validateParameters(args, CREATE_SHAPE_LAYER_SCHEMA);
+    if (!validation.isValid) {
+        return createStandardResponse("error", "Parameter validation failed", {
+            errors: validation.errors,
+            schema: CREATE_SHAPE_LAYER_SCHEMA
+        });
     }
+    
+    // 使用验证后的参数
+    var params = validation.normalizedArgs;
+    
+    // 使用统一的图层创建函数
+    return createLayer("shape", params.compName, params, "Create Shape Layer");
 }
 
 // // ========== 测试函数 ==========

@@ -2,6 +2,7 @@
 // Creates a new text layer in the specified composition
 
 //@include "utils.jsx"
+//@include "layerOperations.jsx"
 
 // ========== 参数验证Schema ==========
 var CREATE_TEXT_LAYER_SCHEMA = {
@@ -37,7 +38,13 @@ var CREATE_TEXT_LAYER_SCHEMA = {
             min: 1,
             max: 500
         },
-        color: {
+        fontFamily: {
+            type: "string",
+            description: "字体家族",
+            example: "Arial",
+            "default": "Arial"
+        },
+        fillColor: {
             type: "array",
             description: "文本颜色 [r, g, b] (0-1范围)",
             example: [1, 1, 1],
@@ -57,120 +64,51 @@ var CREATE_TEXT_LAYER_SCHEMA = {
             "default": 5,
             min: 0
         },
-        fontFamily: {
+        name: {
             type: "string",
-            description: "字体名称",
-            example: "Arial",
-            "default": "Arial"
-        },
-        alignment: {
-            type: "string",
-            description: "文本对齐方式",
-            example: "center",
-            "default": "center",
-            "enum": ["left", "center", "right"]
+            description: "图层名称",
+            example: "My Text",
+            "default": "Text Layer",
+            maxLength: 255
         }
     },
     examples: [
         {
-            name: "简单文本图层",
+            name: "创建基础文本",
             args: {
+                compName: "Main Comp",
                 text: "Hello World",
-                compName: "Main Comp"
+                fontSize: 72,
+                fillColor: [1, 0, 0]
             }
         },
         {
-            name: "自定义格式文本",
+            name: "创建自定义样式文本",
             args: {
-                text: "Custom Text",
                 compName: "Text Comp",
-                position: [100, 200],
+                text: "Custom Text",
+                position: [500, 300],
                 fontSize: 48,
-                color: [1, 0, 0],
                 fontFamily: "Helvetica",
-                alignment: "left"
+                fillColor: [0, 1, 0],
+                name: "Custom Text Layer"
             }
         }
     ]
 };
 
 function createTextLayer(args) {
-    try {
-        // 参数验证
-        var validation = validateParameters(args, CREATE_TEXT_LAYER_SCHEMA);
-        if (!validation.isValid) {
-            return JSON.stringify({
-                status: "error",
-                message: "Parameter validation failed",
-                errors: validation.errors,
-                schema: CREATE_TEXT_LAYER_SCHEMA
-            }, null, 2);
-        }
-        
-        // 使用验证后的参数
-        var params = validation.normalizedArgs;
-        
-        // Find the composition using utility function
-        var compResult = getCompositionByName(params.compName);
-        if (compResult.error) {
-            return JSON.stringify({
-                status: "error",
-                message: compResult.error
-            }, null, 2);
-        }
-        var comp = compResult.composition;
-        
-        // Create the text layer
-        var textLayer = comp.layers.addText(params.text);
-        
-        // Get text properties
-        var textProp = textLayer.property("ADBE Text Properties").property("ADBE Text Document");
-        var textDocument = textProp.value;
-        
-        // Set font size and color
-        textDocument.fontSize = params.fontSize;
-        textDocument.fillColor = params.color;
-        textDocument.font = params.fontFamily;
-        
-        // Set text alignment
-        if (params.alignment === "left") {
-            textDocument.justification = ParagraphJustification.LEFT_JUSTIFY;
-        } else if (params.alignment === "center") {
-            textDocument.justification = ParagraphJustification.CENTER_JUSTIFY;
-        } else if (params.alignment === "right") {
-            textDocument.justification = ParagraphJustification.RIGHT_JUSTIFY;
-        }
-        
-        // Update the text property
-        textProp.setValue(textDocument);
-        
-        // Set position
-        textLayer.property("Position").setValue(params.position);
-        
-        // Set timing
-        textLayer.startTime = params.startTime;
-        if (params.duration > 0) {
-            textLayer.outPoint = params.startTime + params.duration;
-        }
-        
-        // Return success with layer details
-        return JSON.stringify({
-            status: "success",
-            message: "Text layer created successfully",
-            layer: {
-                name: textLayer.name,
-                index: textLayer.index,
-                type: "text",
-                inPoint: textLayer.inPoint,
-                outPoint: textLayer.outPoint,
-                position: textLayer.property("Position").value
-            }
-        }, null, 2);
-    } catch (error) {
-        // Return error message
-        return JSON.stringify({
-            status: "error",
-            message: error.toString()
-        }, null, 2);
+    // 参数验证
+    var validation = validateParameters(args, CREATE_TEXT_LAYER_SCHEMA);
+    if (!validation.isValid) {
+        return createStandardResponse("error", "Parameter validation failed", {
+            errors: validation.errors,
+            schema: CREATE_TEXT_LAYER_SCHEMA
+        });
     }
+    
+    var params = validation.normalizedArgs;
+    
+    // 使用统一的图层创建函数
+    return createLayer("text", params.compName, params, "Create Text Layer");
 } 

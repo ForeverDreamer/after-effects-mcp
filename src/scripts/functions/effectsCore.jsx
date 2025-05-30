@@ -25,6 +25,51 @@ function createStandardResponse(status, message, data, errors) {
     return JSON.stringify(response, null, 2);
 }
 
+// ========== 增强的操作包装函数 ==========
+function executeWithUndoGroup(operationName, operation) {
+    try {
+        app.beginUndoGroup(operationName);
+        var result = operation();
+        app.endUndoGroup();
+        return result;
+    } catch (error) {
+        app.endUndoGroup();
+        throw error;
+    }
+}
+
+// ========== 统一图层操作函数 ==========
+function performLayerOperation(compName, layerIndex, operation, operationName) {
+    try {
+        var layerResult = findLayerInComposition(compName, layerIndex);
+        if (!layerResult.success) {
+            return createStandardResponse("error", layerResult.error);
+        }
+        
+        return executeWithUndoGroup(operationName || "Layer Operation", function() {
+            return operation(layerResult.layer, layerResult.composition);
+        });
+    } catch (error) {
+        return createStandardResponse("error", "Operation failed: " + error.toString());
+    }
+}
+
+// ========== 统一创建操作函数 ==========
+function performCreateOperation(compName, operation, operationName) {
+    try {
+        var compResult = getCompositionByName(compName);
+        if (compResult.error) {
+            return createStandardResponse("error", compResult.error);
+        }
+        
+        return executeWithUndoGroup(operationName || "Create Operation", function() {
+            return operation(compResult.composition);
+        });
+    } catch (error) {
+        return createStandardResponse("error", "Creation failed: " + error.toString());
+    }
+}
+
 // ========== 参数验证增强函数 ==========
 function validateEffectParameters(args, schema, additionalValidation) {
     var validation = validateParameters(args, schema);
@@ -199,13 +244,31 @@ function applySingleEffect(layer, effectConfig) {
     }
 }
 
-// ========== 批量处理核心函数 ==========
+// ========== 增强的通用批量处理函数 ==========
 function processBatchOperation(items, processor, options) {
-    options = options || {};
-    var skipErrors = options.skipErrors !== false; // 默认跳过错误
-    var validateOnly = options.validateOnly === true;
+    var defaultOptions = {
+        skipErrors: true,
+        validateOnly: false,
+        operationName: "Batch Operation",
+        itemName: "item"
+    };
+    
+    // 合并选项
+    var opts = {};
+    for (var key in defaultOptions) {
+        opts[key] = defaultOptions[key];
+    }
+    if (options) {
+        for (var key in options) {
+            if (options.hasOwnProperty(key)) {
+                opts[key] = options[key];
+            }
+        }
+    }
     
     var results = {
+        status: "success",
+        message: opts.validateOnly ? "Validation completed" : opts.operationName + " completed",
         totalItems: items.length,
         successful: 0,
         failed: 0,
@@ -213,42 +276,73 @@ function processBatchOperation(items, processor, options) {
         errors: []
     };
     
-    for (var i = 0; i < items.length; i++) {
-        var item = items[i];
-        var itemResult = {
-            index: i + 1,
-            item: item,
-            status: "pending"
-        };
-        
-        try {
-            var processResult = processor(item, i, validateOnly);
-            
-            if (processResult.success) {
-                itemResult.status = validateOnly ? "valid" : "success";
-                itemResult.result = processResult.result;
-                results.successful++;
-            } else {
-                throw new Error(processResult.error || "Processing failed");
-            }
-        } catch (error) {
-            itemResult.status = "error";
-            itemResult.error = error.toString();
-            results.failed++;
-            results.errors.push({
-                index: i + 1,
-                item: item,
-                error: error.toString()
-            });
-            
-            if (!skipErrors) {
-                results.aborted = true;
-                break;
-            }
-        }
-        
-        results.results.push(itemResult);
+    // 开始撤销组
+    if (!opts.validateOnly) {
+        app.beginUndoGroup(opts.operationName);
     }
     
-    return results;
+    try {
+        // 处理每个项目
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var itemResult = {
+                index: i + 1,
+                config: item,
+                status: "pending"
+            };
+            
+            try {
+                var processorResult = processor(item, i, opts.validateOnly);
+                
+                if (processorResult.success) {
+                    itemResult.status = opts.validateOnly ? "valid" : "success";
+                    if (processorResult.result) {
+                        itemResult.result = processorResult.result;
+                    }
+                    results.successful++;
+                } else {
+                    throw new Error(processorResult.error || "Processor failed");
+                }
+            } catch (error) {
+                itemResult.status = "error";
+                itemResult.error = error.toString();
+                results.failed++;
+                results.errors.push({
+                    index: i + 1,
+                    config: item,
+                    error: error.toString()
+                });
+                
+                if (!opts.skipErrors) {
+                    results.status = "error";
+                    results.message = opts.operationName + " failed at " + opts.itemName + " " + (i + 1) + ": " + error.toString();
+                    break;
+                }
+            }
+            
+            results.results.push(itemResult);
+        }
+        
+        // 设置最终状态
+        if (results.failed > 0 && results.successful === 0) {
+            results.status = "error";
+            results.message = "All " + opts.itemName + "s failed to process";
+        } else if (results.failed > 0) {
+            results.status = "partial";
+            results.message = opts.operationName + " completed with " + results.failed + " failures";
+        }
+        
+        return createStandardResponse(results.status, results.message, {
+            totalItems: results.totalItems,
+            successful: results.successful,
+            failed: results.failed,
+            results: results.results,
+            errors: results.errors
+        });
+        
+    } finally {
+        if (!opts.validateOnly) {
+            app.endUndoGroup();
+        }
+    }
 } 

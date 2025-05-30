@@ -87,37 +87,29 @@ var APPLY_EFFECT_SCHEMA = {
 };
 
 function applyEffect(args) {
-    try {
-        // 参数验证（使用增强的验证函数）
-        var validation = validateEffectParameters(args, APPLY_EFFECT_SCHEMA, function(params) {
-            // 自定义验证逻辑
-            if (!params.effectName && !params.effectMatchName && !params.presetPath) {
-                return {
-                    isValid: false,
-                    errors: ["You must specify either effectName, effectMatchName, or presetPath"]
-                };
-            }
-            return { isValid: true };
+    // 参数验证（使用增强的验证函数）
+    var validation = validateEffectParameters(args, APPLY_EFFECT_SCHEMA, function(params) {
+        // 自定义验证逻辑
+        if (!params.effectName && !params.effectMatchName && !params.presetPath) {
+            return {
+                isValid: false,
+                errors: ["You must specify either effectName, effectMatchName, or presetPath"]
+            };
+        }
+        return { isValid: true };
+    });
+    
+    if (!validation.isValid) {
+        return createStandardResponse("error", "Parameter validation failed", {
+            errors: validation.errors,
+            schema: APPLY_EFFECT_SCHEMA
         });
-        
-        if (!validation.isValid) {
-            return createStandardResponse("error", "Parameter validation failed", {
-                errors: validation.errors,
-                schema: APPLY_EFFECT_SCHEMA
-            });
-        }
-        
-        var params = validation.normalizedArgs;
-        
-        // 查找图层（使用核心工具函数）
-        var layerResult = findLayerInComposition(params.compName, params.layerIndex);
-        if (!layerResult.success) {
-            return createStandardResponse("error", layerResult.error);
-        }
-        
-        var comp = layerResult.composition;
-        var layer = layerResult.layer;
-        
+    }
+    
+    var params = validation.normalizedArgs;
+    
+    // 使用统一的图层操作函数
+    return performLayerOperation(params.compName, params.layerIndex, function(layer, comp) {
         // 应用特效（使用核心函数）
         var effectResult = applySingleEffect(layer, {
             effectName: params.effectName,
@@ -127,7 +119,7 @@ function applyEffect(args) {
         });
         
         if (!effectResult.success) {
-            return createStandardResponse("error", effectResult.error);
+            throw new Error(effectResult.error);
         }
         
         return createStandardResponse("success", "Effect applied successfully", {
@@ -140,48 +132,5 @@ function applyEffect(args) {
                 name: comp.name
             }
         });
-        
-    } catch (error) {
-        return createStandardResponse("error", "Unexpected error: " + error.toString());
-    }
-}
-
-// Helper function to apply effect settings
-function applyEffectSettings(effect, settings) {
-    // Skip if no settings are provided
-    if (!settings || Object.keys(settings).length === 0) {
-        return;
-    }
-    
-    // Iterate through all provided settings
-    for (var propName in settings) {
-        if (settings.hasOwnProperty(propName)) {
-            try {
-                // Find the property in the effect
-                var property = null;
-                
-                // Try direct property access first
-                try {
-                    property = effect.property(propName);
-                } catch (e) {
-                    // If direct access fails, search through all properties
-                    for (var i = 1; i <= effect.numProperties; i++) {
-                        var prop = effect.property(i);
-                        if (prop.name === propName) {
-                            property = prop;
-                            break;
-                        }
-                    }
-                }
-                
-                // Set the property value if found
-                if (property && property.setValue) {
-                    property.setValue(settings[propName]);
-                }
-            } catch (e) {
-                // Log error but continue with other properties
-                $.writeln("Error setting effect property '" + propName + "': " + e.toString());
-            }
-        }
-    }
+    }, "Apply Effect");
 } 
