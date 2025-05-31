@@ -389,6 +389,127 @@ function cleanupOldLogFiles() {
     }
 }
 
+// 清理所有旧日志文件
+function cleanupAllOldLogFiles() {
+    try {
+        var tempDir = getTempDirectory();
+        var removedCount = 0;
+        
+        logInfo("开始清理旧日志文件...", "FILE_CLEANUP");
+        
+        // 清理command_log.txt
+        try {
+            var commandLogFile = new File(tempDir.fsName + "/command_log.txt");
+            if (commandLogFile.exists) {
+                commandLogFile.remove();
+                removedCount++;
+                logDebug("删除文件: command_log.txt", "FILE_CLEANUP");
+            }
+        } catch (e) {
+            logWarn("无法删除command_log.txt: " + e.toString(), "FILE_CLEANUP");
+        }
+        
+        // 清理所有ae_mcp_log_*.txt文件
+        try {
+            var logFiles = tempDir.getFiles("ae_mcp_log_*.txt");
+            for (var i = 0; i < logFiles.length; i++) {
+                try {
+                    var fileName = logFiles[i].name;
+                    // 检查是否是当前正在使用的日志文件
+                    if (LogConfig.currentLogFile && 
+                        logFiles[i].fsName === LogConfig.currentLogFile) {
+                        logDebug("跳过当前日志文件: " + fileName, "FILE_CLEANUP");
+                        continue;
+                    }
+                    
+                    logFiles[i].remove();
+                    removedCount++;
+                    logDebug("删除文件: " + fileName, "FILE_CLEANUP");
+                } catch (e) {
+                    logWarn("无法删除日志文件 " + logFiles[i].name + ": " + e.toString(), "FILE_CLEANUP");
+                }
+            }
+        } catch (e) {
+            logWarn("获取日志文件列表失败: " + e.toString(), "FILE_CLEANUP");
+        }
+        
+        // 清理MCP结果和命令文件
+        try {
+            var mcpResultFile = new File(tempDir.fsName + "/ae_mcp_result.json");
+            if (mcpResultFile.exists) {
+                mcpResultFile.remove();
+                removedCount++;
+                logDebug("删除MCP结果文件: ae_mcp_result.json", "FILE_CLEANUP");
+            }
+            
+            var mcpCommandFile = new File(tempDir.fsName + "/ae_command.json");
+            if (mcpCommandFile.exists) {
+                mcpCommandFile.remove();
+                removedCount++;
+                logDebug("删除MCP命令文件: ae_command.json", "FILE_CLEANUP");
+            }
+        } catch (e) {
+            logWarn("清理MCP文件时出错: " + e.toString(), "FILE_CLEANUP");
+        }
+        
+        // 清理其他临时测试文件
+        try {
+            var tempFiles = tempDir.getFiles("*test*.txt");
+            for (var j = 0; j < tempFiles.length; j++) {
+                try {
+                    var tempFileName = tempFiles[j].name;
+                    // 排除当前可能在使用的文件
+                    if (tempFileName.indexOf("test_config.json") === -1) {
+                        tempFiles[j].remove();
+                        removedCount++;
+                        logDebug("删除临时文件: " + tempFileName, "FILE_CLEANUP");
+                    }
+                } catch (e) {
+                    logWarn("无法删除临时文件 " + tempFiles[j].name + ": " + e.toString(), "FILE_CLEANUP");
+                }
+            }
+        } catch (e) {
+            logWarn("清理临时文件时出错: " + e.toString(), "FILE_CLEANUP");
+        }
+        
+        // 清理其他可能的残留文件
+        try {
+            var patterns = ["*.log", "*_backup*", "*_temp*", "temp_*"];
+            
+            for (var p = 0; p < patterns.length; p++) {
+                try {
+                    var patternFiles = tempDir.getFiles(patterns[p]);
+                    for (var f = 0; f < patternFiles.length; f++) {
+                        try {
+                            var patternFileName = patternFiles[f].name;
+                            // 跳过重要的配置文件
+                            if (patternFileName.indexOf("test_config") === -1 && 
+                                patternFileName !== LogConfig.currentLogFile) {
+                                patternFiles[f].remove();
+                                removedCount++;
+                                logDebug("删除模式匹配文件: " + patternFileName, "FILE_CLEANUP");
+                            }
+                        } catch (e) {
+                            logWarn("无法删除模式文件 " + patternFiles[f].name + ": " + e.toString(), "FILE_CLEANUP");
+                        }
+                    }
+                } catch (e) {
+                    logWarn("清理模式 " + patterns[p] + " 时出错: " + e.toString(), "FILE_CLEANUP");
+                }
+            }
+        } catch (e) {
+            logWarn("清理模式文件时出错: " + e.toString(), "FILE_CLEANUP");
+        }
+        
+        logInfo("日志文件清理完成，删除了 " + removedCount + " 个文件", "FILE_CLEANUP");
+        return true;
+        
+    } catch (error) {
+        logError("清理日志文件失败: " + error.toString(), "FILE_CLEANUP");
+        return false;
+    }
+}
+
 // ========== 文件路径函数 ==========
 function getCurrentDirectory() {
     // 获取当前脚本所在目录
@@ -759,13 +880,38 @@ function clearTestEnvironment() {
         
         var itemsToRemove = [];
         
-        // 查找所有测试相关的项目项
+        // 查找所有测试相关的项目项，包括更广泛的匹配模式
         for (var i = 1; i <= app.project.numItems; i++) {
             var item = app.project.item(i);
-            if (item.name.indexOf("Test_") === 0 || 
-                item.name.indexOf("test_") === 0 ||
-                item.name === "Test_Composition") {
+            var itemName = item.name;
+            
+            // 检查是否是测试相关的项目项
+            if (itemName.indexOf("Test_") === 0 || 
+                itemName.indexOf("test_") === 0 ||
+                itemName === "Test_Composition" ||
+                itemName === "Test_HD_Composition" ||
+                itemName === "Solids" ||
+                itemName.indexOf("Red ") === 0 ||      // 测试创建的形状图层
+                itemName.indexOf("Green ") === 0 ||
+                itemName.indexOf("Blue ") === 0 ||
+                itemName.indexOf("Yellow ") === 0 ||
+                itemName.indexOf("Magenta ") === 0 ||
+                itemName.indexOf("Main Title") === 0 ||   // 测试创建的文本图层
+                itemName.indexOf("Sub Title") === 0 ||
+                itemName.indexOf("Description ") === 0 ||
+                itemName.indexOf("Valid ") === 0 ||      // 测试中的有效图层
+                itemName.indexOf("Invalid ") === 0 ||    // 测试中的无效图层
+                itemName.indexOf("Dark Background") === 0 ||  // 测试创建的背景图层
+                itemName.indexOf("White Overlay") === 0 ||
+                itemName.indexOf("Validation ") === 0 ||     // 验证相关的图层
+                itemName.indexOf("Empty ") === 0 ||          // 空内容测试图层
+                itemName.indexOf("Hexagon") >= 0 ||          // 多边形测试图层  
+                itemName.indexOf("Star") >= 0 ||             // 星形测试图层
+                itemName.indexOf("Circle") >= 0 ||           // 圆形测试图层
+                itemName.indexOf("Rectangle") >= 0) {        // 矩形测试图层
+                
                 itemsToRemove.push(item);
+                logDebug("标记删除项目项: " + itemName, "TEST_ENV");
             }
         }
         
@@ -773,11 +919,39 @@ function clearTestEnvironment() {
         var removedCount = 0;
         for (var j = 0; j < itemsToRemove.length; j++) {
             try {
+                var itemName = itemsToRemove[j].name;
                 itemsToRemove[j].remove();
                 removedCount++;
+                logDebug("已删除项目项: " + itemName, "TEST_ENV");
             } catch (e) {
                 logWarn("无法删除项目项: " + itemsToRemove[j].name + " - " + e.toString(), "TEST_ENV");
             }
+        }
+        
+        // 清理渲染队列中的测试项目
+        try {
+            var renderQueue = app.project.renderQueue;
+            var queueItemsToRemove = [];
+            
+            for (var k = 1; k <= renderQueue.numItems; k++) {
+                var queueItem = renderQueue.item(k);
+                if (queueItem.comp && queueItem.comp.name && 
+                    (queueItem.comp.name.indexOf("Test_") === 0 || 
+                     queueItem.comp.name.indexOf("test_") === 0)) {
+                    queueItemsToRemove.push(queueItem);
+                }
+            }
+            
+            for (var l = 0; l < queueItemsToRemove.length; l++) {
+                try {
+                    queueItemsToRemove[l].remove();
+                    logDebug("已清理渲染队列项目: " + queueItemsToRemove[l].comp.name, "TEST_ENV");
+                } catch (e) {
+                    logWarn("无法清理渲染队列项目: " + e.toString(), "TEST_ENV");
+                }
+            }
+        } catch (renderError) {
+            logWarn("清理渲染队列时出错: " + renderError.toString(), "TEST_ENV");
         }
         
         logInfo("测试环境清理完成，删除了 " + removedCount + " 个项目项", "TEST_ENV");
@@ -785,6 +959,85 @@ function clearTestEnvironment() {
         
     } catch (error) {
         logError("清理测试环境失败: " + error.toString(), "TEST_ENV");
+        return false;
+    } finally {
+        app.endUndoGroup();
+    }
+}
+
+// 清理所有合成中的测试图层
+function clearAllTestLayers() {
+    try {
+        app.beginUndoGroup("Clear All Test Layers");
+        
+        var totalLayersRemoved = 0;
+        var compsProcessed = 0;
+        
+        logInfo("开始彻底清理所有合成中的测试图层...", "TEST_ENV");
+        
+        // 遍历所有合成
+        for (var i = 1; i <= app.project.numItems; i++) {
+            var item = app.project.item(i);
+            
+            if (item instanceof CompItem) {
+                var comp = item;
+                var layersToRemove = [];
+                compsProcessed++;
+                
+                logDebug("检查合成: " + comp.name + " (包含 " + comp.numLayers + " 个图层)", "TEST_ENV");
+                
+                // 检查合成中的每个图层
+                for (var j = 1; j <= comp.numLayers; j++) {
+                    var layer = comp.layer(j);
+                    var layerName = layer.name;
+                    
+                    // 检查是否是测试相关的图层（彻底清理）
+                    if (layerName.indexOf("Test") >= 0 ||
+                        layerName.indexOf("test") >= 0 ||
+                        layerName.indexOf("Red ") === 0 ||
+                        layerName.indexOf("Green ") === 0 ||
+                        layerName.indexOf("Blue ") === 0 ||
+                        layerName.indexOf("Yellow ") === 0 ||
+                        layerName.indexOf("Magenta ") === 0 ||
+                        layerName.indexOf("Main Title") >= 0 ||
+                        layerName.indexOf("Sub Title") >= 0 ||
+                        layerName.indexOf("Description") >= 0 ||
+                        layerName.indexOf("Valid ") === 0 ||
+                        layerName.indexOf("Invalid ") === 0 ||
+                        layerName.indexOf("Dark Background") >= 0 ||
+                        layerName.indexOf("White Overlay") >= 0 ||
+                        layerName.indexOf("Validation") >= 0 ||
+                        layerName.indexOf("Empty") >= 0 ||
+                        layerName.indexOf("Hexagon") >= 0 ||
+                        layerName.indexOf("Star") >= 0 ||
+                        layerName.indexOf("Circle") >= 0 ||
+                        layerName.indexOf("Rectangle") >= 0 ||
+                        layerName.indexOf("Layer") >= 0) {
+                        
+                        layersToRemove.push({layer: layer, name: layerName});
+                        logDebug("标记删除图层: " + layerName + " (在合成 " + comp.name + " 中)", "TEST_ENV");
+                    }
+                }
+                
+                // 删除标记的图层（从后往前删除以避免索引问题）
+                for (var k = layersToRemove.length - 1; k >= 0; k--) {
+                    try {
+                        var layerToRemove = layersToRemove[k];
+                        layerToRemove.layer.remove();
+                        totalLayersRemoved++;
+                        logDebug("已删除图层: " + layerToRemove.name + " (在合成 " + comp.name + " 中)", "TEST_ENV");
+                    } catch (e) {
+                        logWarn("无法删除图层: " + layersToRemove[k].name + " - " + e.toString(), "TEST_ENV");
+                    }
+                }
+            }
+        }
+        
+        logInfo("图层清理完成，处理了 " + compsProcessed + " 个合成，删除了 " + totalLayersRemoved + " 个图层", "TEST_ENV");
+        return true;
+        
+    } catch (error) {
+        logError("清理测试图层失败: " + error.toString(), "TEST_ENV");
         return false;
     } finally {
         app.endUndoGroup();
@@ -1002,50 +1255,106 @@ function executeAllEnabledTests() {
     writeCommandLog("=== 开始批量测试执行 ===");
     writeCommandLog("总测试函数数量: " + totalTests);
     
-    // 自动确保测试环境存在
-    logInfo("自动确保测试环境已准备...", "TEST");
-    var envReady = false;
+    // 1. 首先清理旧的测试环境和日志文件
+    testProgressText.text = "正在清理测试环境和旧日志文件...";
+    logInfo("开始清理测试环境和日志文件...", "TEST");
     
-    // 检查是否有活动合成
-    if (app.project.activeItem instanceof CompItem) {
-        logInfo("找到活动合成: " + app.project.activeItem.name, "TEST");
-        envReady = true;
-    } else {
-        // 查找测试合成
-        for (var i = 1; i <= app.project.numItems; i++) {
-            var item = app.project.item(i);
-            if (item instanceof CompItem && item.name === "Test_Composition") {
-                item.openInViewer();
-                logInfo("激活测试合成: " + item.name, "TEST");
-                envReady = true;
-                break;
-            }
+    // 清理项目中的测试环境
+    try {
+        var envCleanupSuccess = clearTestEnvironment();
+        if (envCleanupSuccess) {
+            logInfo("项目测试环境清理成功", "TEST");
+        } else {
+            logWarn("项目测试环境清理部分失败，但继续执行测试", "TEST");
         }
+    } catch (envError) {
+        logError("清理项目测试环境时出错: " + envError.toString(), "TEST");
     }
     
-    // 如果没有可用合成，自动创建测试环境
-    if (!envReady) {
-        logInfo("自动创建测试环境...", "TEST");
-        var createSuccess = createTestEnvironment();
-        if (createSuccess) {
-            // 激活测试合成
-            for (var j = 1; j <= app.project.numItems; j++) {
-                var item = app.project.item(j);
-                if (item instanceof CompItem && item.name === "Test_Composition") {
-                    item.openInViewer();
-                    logInfo("已激活新创建的测试合成", "TEST");
+    // 清理所有合成中的测试图层
+    try {
+        var layerCleanupSuccess = clearAllTestLayers();
+        if (layerCleanupSuccess) {
+            logInfo("合成图层清理成功", "TEST");
+        } else {
+            logWarn("合成图层清理部分失败，但继续执行测试", "TEST");
+        }
+    } catch (layerError) {
+        logError("清理合成图层时出错: " + layerError.toString(), "TEST");
+    }
+    
+    // 清理旧的日志文件
+    try {
+        var logCleanupSuccess = cleanupAllOldLogFiles();
+        if (logCleanupSuccess) {
+            logInfo("日志文件清理成功", "TEST");
+        } else {
+            logWarn("日志文件清理部分失败，但继续执行测试", "TEST");
+        }
+    } catch (logError) {
+        logError("清理日志文件时出错: " + logError.toString(), "TEST");
+    }
+    
+    // 2. 然后自动确保测试环境存在
+    testProgressText.text = "正在准备测试环境...";
+    logInfo("自动确保测试环境已准备...", "TEST");
+    
+    // 强制重新创建测试环境（确保清理后环境完整）
+    testProgressText.text = "正在重新创建测试环境...";
+    logInfo("强制重新创建测试环境...", "TEST");
+    
+    var createSuccess = createTestEnvironment();
+    if (!createSuccess) {
+        logError("无法创建测试环境，终止测试", "TEST");
+        testProgressText.text = "测试环境创建失败";
+        return;
+    }
+    
+    // 激活测试合成并验证图层数量
+    var envReady = false;
+    var testComp = null;
+    
+    for (var i = 1; i <= app.project.numItems; i++) {
+        var item = app.project.item(i);
+        if (item instanceof CompItem && item.name === "Test_Composition") {
+            testComp = item;
+            item.openInViewer();
+            logInfo("激活测试合成: " + item.name + " (包含 " + item.numLayers + " 个图层)", "TEST");
+            
+            // 验证合成有足够的图层
+            if (item.numLayers >= 2) {
+                envReady = true;
+                logInfo("测试环境验证成功，图层数量: " + item.numLayers, "TEST");
+            } else {
+                logWarn("测试合成图层数量不足，尝试补充图层", "TEST");
+                
+                // 添加更多测试图层以确保测试可以正常进行
+                try {
+                    while (item.numLayers < 3) {
+                        var additionalSolid = item.layers.addSolid([Math.random(), Math.random(), Math.random()], 
+                                                                  "Additional_Test_Layer_" + (item.numLayers + 1), 
+                                                                  item.width, item.height, 1);
+                        logDebug("添加补充测试图层: " + additionalSolid.name, "TEST_ENV");
+                    }
                     envReady = true;
-                    break;
+                    logInfo("已补充测试图层，当前图层数量: " + item.numLayers, "TEST");
+                } catch (addError) {
+                    logError("补充测试图层失败: " + addError.toString(), "TEST");
                 }
             }
+            break;
         }
     }
     
     if (!envReady) {
         logError("无法准备测试环境，终止测试", "TEST");
-        testProgressText.text = "测试环境准备失败";
+        testProgressText.text = "测试环境验证失败";
         return;
     }
+    
+    // 3. 开始执行测试
+    testProgressText.text = "开始执行测试...";
+    writeCommandLog("测试环境准备完成，开始执行测试");
     
     // 保存原始alert函数并替换
     var originalAlert = alert;

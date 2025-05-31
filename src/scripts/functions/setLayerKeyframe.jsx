@@ -154,6 +154,23 @@ function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, val
         if (!comp || !(comp instanceof CompItem)) {
             return JSON.stringify({ success: false, message: "Composition not found" });
         }
+        
+        // 检查合成是否有图层
+        if (comp.numLayers === 0) {
+            return JSON.stringify({ 
+                success: false, 
+                message: "Composition '" + comp.name + "' has no layers. Please create layers first." 
+            });
+        }
+        
+        // 检查图层索引是否有效
+        if (params.layerIndex < 1 || params.layerIndex > comp.numLayers) {
+            return JSON.stringify({ 
+                success: false, 
+                message: "Layer index " + params.layerIndex + " is out of range. Composition '" + comp.name + "' has " + comp.numLayers + " layers (valid range: 1-" + comp.numLayers + ")" 
+            });
+        }
+        
         var layer = comp.layers[params.layerIndex];
         if (!layer) {
             return JSON.stringify({ success: false, message: "Layer not found at index " + params.layerIndex + " in composition '" + comp.name + "'"});

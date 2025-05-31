@@ -279,26 +279,29 @@ function batchApplyEffects(args) {
                 validateOnly: validateOnly
             });
             
+            // 修复：processBatchOperation 返回的是标准响应格式，需要从data字段获取真实数据
+            var resultData = batchResult.data || {};
+            
             var finalStatus = "success";
             var finalMessage = validateOnly ? "Validation completed" : "Batch effect application completed";
             
-            if (batchResult.failed > 0 && batchResult.successful === 0) {
+            if (resultData.failed > 0 && resultData.successful === 0) {
                 finalStatus = "error";
                 finalMessage = "All applications failed";
-            } else if (batchResult.failed > 0) {
+            } else if (resultData.failed > 0) {
                 finalStatus = "partial";
-                finalMessage = "Batch operation completed with " + batchResult.failed + " errors";
+                finalMessage = "Batch operation completed with " + resultData.failed + " errors";
             }
             
             return createStandardResponse(finalStatus, finalMessage, {
                 summary: {
-                    totalApplications: batchResult.totalItems,
-                    successful: batchResult.successful,
-                    failed: batchResult.failed,
+                    totalApplications: resultData.totalItems,
+                    successful: resultData.successful,
+                    failed: resultData.failed,
                     validateOnly: validateOnly
                 },
-                results: batchResult.results,
-                errors: batchResult.errors
+                results: resultData.results,
+                errors: resultData.errors
             });
             
         } finally {
