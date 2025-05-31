@@ -1,3 +1,4 @@
+// Unicode compatibility comment: 🎯📋🧪⚙️📄🗑️ - Forces ExtendScript to read script in Unicode mode
 // mcp-bridge-auto.jsx
 // Auto-running MCP Bridge panel for After Effects (Enhanced Version)
 
@@ -584,26 +585,27 @@ function loadTestConfig() {
 
 // ========== 界面创建 ==========
 // Create panel interface
-var panel = (this instanceof Panel) ? this : new Window("palette", "🚀 MCP Bridge Auto (Enhanced)", undefined);
+var panel = (this instanceof Panel) ? this : new Window("palette", "MCP Bridge Auto (Enhanced)", undefined);
 panel.orientation = "column";
 panel.alignChildren = ["fill", "fill"];
-panel.spacing = 4; // 减少面板间距
-panel.margins = 8;
+panel.spacing = 6; // 增加面板间距
+panel.margins = 10;
 panel.preferredSize.width = 350;
-panel.preferredSize.height = 290; // 稍微增加总高度
+panel.preferredSize.height = 300; // 稍微增加总高度
 
 // ========== 顶部状态栏 ==========
 var headerPanel = panel.add("panel");
 headerPanel.orientation = "row";
 headerPanel.alignChildren = ["fill", "center"];
 headerPanel.alignment = ["fill", "top"];
-headerPanel.preferredSize.height = 26; // 减少状态栏高度
-headerPanel.spacing = 5;
-headerPanel.margins = 4;
+headerPanel.preferredSize.height = 28; // 增加状态栏高度
+headerPanel.spacing = 6;
+headerPanel.margins = 6;
 
 // 状态指示器
 var statusIndicator = headerPanel.add("statictext", undefined, "●");
 statusIndicator.graphics.foregroundColor = statusIndicator.graphics.newPen(statusIndicator.graphics.PenType.SOLID_COLOR, [0, 0.8, 0], 1);
+statusIndicator.alignment = ["left", "center"];
 
 var statusText = headerPanel.add("statictext", undefined, "Ready - Auto-run is ON");
 statusText.alignment = ["fill", "center"];
@@ -611,35 +613,39 @@ statusText.alignment = ["fill", "center"];
 // ========== 主选项卡区域 ==========
 var tabPanel = panel.add("tabbedpanel");
 tabPanel.alignChildren = "fill";
-tabPanel.preferredSize.height = 210; // 增加选项卡高度
+tabPanel.preferredSize.height = 220; // 调整选项卡高度
 tabPanel.alignment = ["fill", "fill"];
 tabPanel.spacing = 0;
-tabPanel.margins = 0;
+tabPanel.margins = 2;
 
 // ========== 主控制选项卡 ==========
-var mainTab = tabPanel.add("tab", undefined, "📋 主控制");
+var mainTab = tabPanel.add("tab", undefined, "主控制");
 mainTab.orientation = "column";
 mainTab.alignChildren = ["fill", "fill"];
-mainTab.spacing = 6;
-mainTab.margins = 5;
+mainTab.spacing = 8;
+mainTab.margins = 8;
 
 // ========== 日志显示区域 ==========
 var logContainer = mainTab.add("group");
 logContainer.orientation = "column";
 logContainer.alignChildren = ["fill", "fill"];
 logContainer.alignment = ["fill", "fill"];
-logContainer.spacing = 3;
+logContainer.spacing = 5;
 
 // 日志标题栏
 var logTitleBar = logContainer.add("group");
 logTitleBar.orientation = "row";
 logTitleBar.alignChildren = ["fill", "center"];
-logTitleBar.preferredSize.height = 20; // 减少标题栏高度
+logTitleBar.preferredSize.height = 24;
+logTitleBar.spacing = 8;
 
-var logTitle = logTitleBar.add("statictext", undefined, "📄 实时日志");
-var logClearBtn = logTitleBar.add("button", undefined, "🗑️ 清空");
-logClearBtn.preferredSize.width = 60; // 增加宽度以容纳文字
-logClearBtn.preferredSize.height = 18; // 减少按钮高度
+var logTitle = logTitleBar.add("statictext", undefined, "实时日志");
+logTitle.alignment = ["fill", "center"];
+
+var logClearBtn = logTitleBar.add("button", undefined, "清空");
+logClearBtn.preferredSize.width = 50;
+logClearBtn.preferredSize.height = 20;
+logClearBtn.alignment = ["right", "center"];
 logClearBtn.helpTip = "清空所有日志记录";
 
 // 日志文本区域（带边框效果）- 使用弹性高度
@@ -647,8 +653,8 @@ var logPanel = logContainer.add("panel");
 logPanel.orientation = "column";
 logPanel.alignChildren = ["fill", "fill"];
 logPanel.alignment = ["fill", "fill"];
-logPanel.spacing = 1;
-logPanel.margins = 2;
+logPanel.spacing = 2;
+logPanel.margins = 4;
 
 var logText = logPanel.add("edittext", undefined, "", {multiline: true, readonly: true, scrolling: true});
 logText.alignment = ["fill", "fill"];
@@ -657,42 +663,47 @@ logText.alignment = ["fill", "fill"];
 // ========== 分隔线 ==========
 var separator = mainTab.add("panel");
 separator.preferredSize.height = 1;
+separator.alignment = ["fill", "top"];
 
 // ========== 控制操作区域 ==========
 var controlContainer = mainTab.add("group");
 controlContainer.orientation = "column";
 controlContainer.alignChildren = ["fill", "top"];
-controlContainer.spacing = 4; // 减少间距
-controlContainer.margins = [3, 2, 3, 2]; // 减少边距
-controlContainer.preferredSize.height = 50; // 限制控制区域高度
+controlContainer.spacing = 6;
+controlContainer.margins = [4, 4, 4, 4];
+controlContainer.preferredSize.height = 55;
 
 // 自动运行控制行
 var autoRunRow = controlContainer.add("group");
 autoRunRow.orientation = "row";
-autoRunRow.alignChildren = ["left", "center"];
-autoRunRow.spacing = 6;
+autoRunRow.alignChildren = ["fill", "center"];
+autoRunRow.spacing = 10;
+autoRunRow.preferredSize.height = 22;
 
-var autoRunCheckbox = autoRunRow.add("checkbox", undefined, "🔄 自动运行");
+var autoRunCheckbox = autoRunRow.add("checkbox", undefined, "自动运行");
+autoRunCheckbox.alignment = ["left", "center"];
 autoRunCheckbox.value = true;
 
-var statusLabel = autoRunRow.add("statictext", undefined, "| 状态：活跃");
+var statusLabel = autoRunRow.add("statictext", undefined, "状态：活跃");
+statusLabel.alignment = ["right", "center"];
 
 // 手动操作按钮行
 var buttonRow = controlContainer.add("group");
 buttonRow.orientation = "row";
 buttonRow.alignChildren = ["fill", "center"];
-buttonRow.spacing = 4;
+buttonRow.spacing = 8;
+buttonRow.preferredSize.height = 28;
 
-var checkButton = buttonRow.add("button", undefined, "🔍 立即检查");
+var checkButton = buttonRow.add("button", undefined, "立即检查");
 checkButton.alignment = ["fill", "center"];
-checkButton.preferredSize.height = 26;
+checkButton.preferredSize.height = 24;
 
 // ========== 测试函数控制选项卡 ==========
-var testTab = tabPanel.add("tab", undefined, "🧪 测试控制");
+var testTab = tabPanel.add("tab", undefined, "测试控制");
 testTab.orientation = "column";
 testTab.alignChildren = ["fill", "fill"];
-testTab.spacing = 4;
-testTab.margins = 5;
+testTab.spacing = 6;
+testTab.margins = 8;
 testTab.preferredSize.width = 325;
 testTab.preferredSize.height = 200;
 
@@ -700,57 +711,62 @@ testTab.preferredSize.height = 200;
 var quickActionBar = testTab.add("group");
 quickActionBar.orientation = "row";
 quickActionBar.alignChildren = ["fill", "center"];
-quickActionBar.spacing = 3;
-quickActionBar.preferredSize.height = 30;
+quickActionBar.spacing = 8;
+quickActionBar.preferredSize.height = 32;
 
-var executeAllBtn = quickActionBar.add("button", undefined, "🚀 执行测试");
-executeAllBtn.preferredSize.width = 100;
+var executeAllBtn = quickActionBar.add("button", undefined, "执行测试");
+executeAllBtn.preferredSize.width = 80;
 executeAllBtn.preferredSize.height = 26;
+executeAllBtn.alignment = ["left", "center"];
 
-var toggleAllBtn = quickActionBar.add("button", undefined, "🔄 全选");
-toggleAllBtn.preferredSize.width = 70;
+var toggleAllBtn = quickActionBar.add("button", undefined, "全选");
+toggleAllBtn.preferredSize.width = 60;
 toggleAllBtn.preferredSize.height = 26;
+toggleAllBtn.alignment = ["left", "center"];
 
-var configBtn = quickActionBar.add("button", undefined, "⚙️ 配置");
-configBtn.preferredSize.width = 60;
-configBtn.preferredSize.height = 26;
+// 添加弹性空间
+var spacer = quickActionBar.add("group");
+spacer.alignment = ["fill", "center"];
 
 // ========== 批量操作区域 ==========
-var batchPanel = testTab.add("panel", undefined, "⚙️ 批量操作");
+var batchPanel = testTab.add("panel", undefined, "批量操作");
 batchPanel.orientation = "row";
 batchPanel.alignChildren = ["fill", "center"];
-batchPanel.preferredSize.height = 32;
-batchPanel.spacing = 2;
-batchPanel.margins = 2;
+batchPanel.preferredSize.height = 36;
+batchPanel.spacing = 8;
+batchPanel.margins = 6;
 
-var loadConfigButton = batchPanel.add("button", undefined, "📂 载入");
-loadConfigButton.preferredSize.width = 50;
+var loadConfigButton = batchPanel.add("button", undefined, "载入");
+loadConfigButton.preferredSize.width = 60;
 loadConfigButton.preferredSize.height = 24;
+loadConfigButton.alignment = ["left", "center"];
 
-var saveConfigButton = batchPanel.add("button", undefined, "💾 保存");
-saveConfigButton.preferredSize.width = 50;
+var saveConfigButton = batchPanel.add("button", undefined, "保存");
+saveConfigButton.preferredSize.width = 60;
 saveConfigButton.preferredSize.height = 24;
+saveConfigButton.alignment = ["left", "center"];
 
-// 状态显示
-var statusDisplay = batchPanel.add("statictext", undefined, "📊 准备就绪");
-statusDisplay.alignment = ["fill", "center"];
+// 添加弹性空间
+var batchSpacer = batchPanel.add("group");
+batchSpacer.alignment = ["fill", "center"];
 
 // ========== 测试状态显示 ==========
 var testStatusGroup = testTab.add("group");
 testStatusGroup.orientation = "row";
 testStatusGroup.alignChildren = ["fill", "center"];
-testStatusGroup.preferredSize.height = 16;
+testStatusGroup.preferredSize.height = 20;
+testStatusGroup.spacing = 5;
 
-var testProgressText = testStatusGroup.add("statictext", undefined, "📊 准备就绪");
+var testProgressText = testStatusGroup.add("statictext", undefined, "测试状态显示");
 testProgressText.alignment = ["fill", "center"];
 
 // ========== 测试函数分类选择面板 ==========
-var categoryPanel = testTab.add("panel", undefined, "📋 测试函数选择");
+var categoryPanel = testTab.add("panel", undefined, "测试函数选择");
 categoryPanel.orientation = "column";
 categoryPanel.alignChildren = ["fill", "fill"];
 categoryPanel.alignment = ["fill", "fill"]; // 确保填充剩余空间
-categoryPanel.spacing = 1;
-categoryPanel.margins = 1;
+categoryPanel.spacing = 4;
+categoryPanel.margins = 6;
 
 var categoryControls = {};
 
@@ -759,24 +775,15 @@ function createCompactCategoryControls() {
     var row1 = categoryPanel.add("group");
     row1.orientation = "row";
     row1.alignChildren = ["fill", "top"];
-    row1.spacing = 8;
+    row1.spacing = 12;
     
     var row2 = categoryPanel.add("group");
     row2.orientation = "row";
     row2.alignChildren = ["fill", "top"];
-    row2.spacing = 8;
+    row2.spacing = 12;
     
     var containers = [row1, row2];
     var categoryIndex = 0;
-    
-    // 类别图标映射
-    var categoryIcons = {
-        creation: "🏗️",
-        modification: "✏️", 
-        effects: "✨",
-        information: "📊",
-        batch: "⚡"
-    };
     
     for (var categoryKey in TestFunctionConfig.categories) {
         var category = TestFunctionConfig.categories[categoryKey];
@@ -787,17 +794,18 @@ function createCompactCategoryControls() {
         catGroup.orientation = "column";
         catGroup.alignChildren = ["fill", "top"];
         catGroup.preferredSize.width = 155;
-        catGroup.spacing = 2;
-        catGroup.margins = 2;
+        catGroup.spacing = 4;
+        catGroup.margins = 4;
         
         // 类别标题行
         var catHeader = catGroup.add("group");
         catHeader.orientation = "row";
         catHeader.alignChildren = ["left", "center"];
+        catHeader.preferredSize.height = 22;
         
-        var icon = categoryIcons[categoryKey] || "📁";
-        var catCheckbox = catHeader.add("checkbox", undefined, icon + " " + getCategoryDisplayName(categoryKey));
+        var catCheckbox = catHeader.add("checkbox", undefined, getCategoryDisplayName(categoryKey));
         catCheckbox.value = category.enabled;
+        catCheckbox.alignment = ["left", "center"];
         
         categoryControls[categoryKey] = {
             checkbox: catCheckbox,
@@ -810,11 +818,13 @@ function createCompactCategoryControls() {
             var funcGroup = catGroup.add("group");
             funcGroup.orientation = "row";
             funcGroup.alignment = ["fill", "top"];
-            funcGroup.margins = [15, 0, 0, 0];
-            funcGroup.spacing = 3;
+            funcGroup.margins = [12, 2, 2, 2];
+            funcGroup.spacing = 4;
+            funcGroup.preferredSize.height = 18;
             
-            var funcCheckbox = funcGroup.add("checkbox", undefined, "• " + func.description);
+            var funcCheckbox = funcGroup.add("checkbox", undefined, func.description);
             funcCheckbox.value = func.enabled;
+            funcCheckbox.alignment = ["left", "center"];
             
             categoryControls[categoryKey].functions[funcKey] = funcCheckbox;
         }
@@ -847,30 +857,6 @@ executeAllBtn.onClick = function() {
     executeAllEnabledTests();
 };
 
-// 配置按钮下拉菜单功能
-configBtn.onClick = function() {
-    // 创建配置菜单
-    var configMenu = [
-        {text: "📂 加载配置", onClick: function() { loadTestConfig(); }},
-        {text: "💾 保存配置", onClick: function() { saveTestConfig(); }},
-        {text: "🗑️ 清理日志", onClick: function() { cleanupAllOldLogFiles(); }},
-        {text: "🔄 重置配置", onClick: function() { 
-            // 重置所有配置到默认状态
-            for (var categoryKey in TestFunctionConfig.categories) {
-                TestFunctionConfig.categories[categoryKey].enabled = true;
-                for (var funcKey in TestFunctionConfig.categories[categoryKey].functions) {
-                    TestFunctionConfig.categories[categoryKey].functions[funcKey].enabled = true;
-                }
-            }
-            updateTestConfigUI();
-            logInfo("配置已重置为默认状态", "CONFIG");
-        }}
-    ];
-    
-    // 简化版菜单，直接执行加载配置
-    loadTestConfig();
-};
-
 // ========== 事件处理 ==========
 // 简化的批量操作（重新映射toggleAllButton）
 var allEnabled = true;
@@ -887,7 +873,7 @@ toggleAllButton.onClick = function() {
     updateTestConfigUI();
     
     // 动态更新按钮文字
-    this.text = allEnabled ? "🔄 全选" : "🔄 全选";
+    this.text = allEnabled ? "全选" : "全选";
     logInfo("批量" + (allEnabled ? "启用" : "禁用") + "所有测试函数", "CONFIG");
 };
 
@@ -910,13 +896,13 @@ autoRunCheckbox.onClick = function() {
             // 绿色表示活跃
             statusIndicator.graphics.foregroundColor = statusIndicator.graphics.newPen(statusIndicator.graphics.PenType.SOLID_COLOR, [0, 0.8, 0], 1);
             statusText.text = "Ready - Auto-run is ON";
-            statusLabel.text = "| 状态：活跃";
+            statusLabel.text = "状态：活跃";
             logInfo("自动运行已启用", "USER_ACTION");
         } else {
             // 橙色表示暂停
             statusIndicator.graphics.foregroundColor = statusIndicator.graphics.newPen(statusIndicator.graphics.PenType.SOLID_COLOR, [1, 0.5, 0], 1);
             statusText.text = "Ready - Auto-run is OFF";
-            statusLabel.text = "| 状态：暂停";
+            statusLabel.text = "状态：暂停";
             logInfo("自动运行已禁用", "USER_ACTION");
         }
     } catch (e) {
