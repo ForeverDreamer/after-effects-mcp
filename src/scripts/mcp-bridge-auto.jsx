@@ -584,118 +584,219 @@ function loadTestConfig() {
 
 // ========== 界面创建 ==========
 // Create panel interface
-var panel = (this instanceof Panel) ? this : new Window("palette", "MCP Bridge Auto (Enhanced)", undefined);
+var panel = (this instanceof Panel) ? this : new Window("palette", "🚀 MCP Bridge Auto (Enhanced)", undefined);
 panel.orientation = "column";
-panel.alignChildren = ["fill", "top"];
-panel.spacing = 10;
-panel.margins = 16;
-panel.preferredSize.width = 700; // 减小宽度
-panel.preferredSize.height = 600; // 增加高度以适应更大的日志区域
+panel.alignChildren = ["fill", "fill"];
+panel.spacing = 4; // 减少面板间距
+panel.margins = 8;
+panel.preferredSize.width = 350;
+panel.preferredSize.height = 290; // 稍微增加总高度
 
-// Status display
-var statusText = panel.add("statictext", undefined, "Waiting for commands...");
-statusText.alignment = ["fill", "top"];
+// ========== 顶部状态栏 ==========
+var headerPanel = panel.add("panel");
+headerPanel.orientation = "row";
+headerPanel.alignChildren = ["fill", "center"];
+headerPanel.alignment = ["fill", "top"];
+headerPanel.preferredSize.height = 26; // 减少状态栏高度
+headerPanel.spacing = 5;
+headerPanel.margins = 4;
 
-// Main tabs
+// 状态指示器
+var statusIndicator = headerPanel.add("statictext", undefined, "●");
+statusIndicator.graphics.foregroundColor = statusIndicator.graphics.newPen(statusIndicator.graphics.PenType.SOLID_COLOR, [0, 0.8, 0], 1);
+
+var statusText = headerPanel.add("statictext", undefined, "Ready - Auto-run is ON");
+statusText.alignment = ["fill", "center"];
+
+// ========== 主选项卡区域 ==========
 var tabPanel = panel.add("tabbedpanel");
 tabPanel.alignChildren = "fill";
-tabPanel.preferredSize.height = 400;
+tabPanel.preferredSize.height = 210; // 增加选项卡高度
+tabPanel.alignment = ["fill", "fill"];
+tabPanel.spacing = 0;
+tabPanel.margins = 0;
 
 // ========== 主控制选项卡 ==========
-var mainTab = tabPanel.add("tab", undefined, "主控制");
+var mainTab = tabPanel.add("tab", undefined, "📋 主控制");
 mainTab.orientation = "column";
-mainTab.alignChildren = ["fill", "top"];
+mainTab.alignChildren = ["fill", "fill"];
+mainTab.spacing = 6;
+mainTab.margins = 5;
 
-// Add log area
-var logPanel = mainTab.add("panel", undefined, "Command Log");
+// ========== 日志显示区域 ==========
+var logContainer = mainTab.add("group");
+logContainer.orientation = "column";
+logContainer.alignChildren = ["fill", "fill"];
+logContainer.alignment = ["fill", "fill"];
+logContainer.spacing = 3;
+
+// 日志标题栏
+var logTitleBar = logContainer.add("group");
+logTitleBar.orientation = "row";
+logTitleBar.alignChildren = ["fill", "center"];
+logTitleBar.preferredSize.height = 20; // 减少标题栏高度
+
+var logTitle = logTitleBar.add("statictext", undefined, "📄 实时日志");
+var logClearBtn = logTitleBar.add("button", undefined, "🗑️ 清空");
+logClearBtn.preferredSize.width = 60; // 增加宽度以容纳文字
+logClearBtn.preferredSize.height = 18; // 减少按钮高度
+logClearBtn.helpTip = "清空所有日志记录";
+
+// 日志文本区域（带边框效果）- 使用弹性高度
+var logPanel = logContainer.add("panel");
 logPanel.orientation = "column";
 logPanel.alignChildren = ["fill", "fill"];
-logPanel.alignment = ["fill", "fill"]; // 让日志面板填充剩余空间
-var logText = logPanel.add("edittext", undefined, "", {multiline: true, readonly: true});
-logText.alignment = ["fill", "fill"]; // 让文本框填充整个面板
+logPanel.alignment = ["fill", "fill"];
+logPanel.spacing = 1;
+logPanel.margins = 2;
 
-// Auto-run checkbox
-var autoRunCheckbox = mainTab.add("checkbox", undefined, "Auto-run commands");
+var logText = logPanel.add("edittext", undefined, "", {multiline: true, readonly: true, scrolling: true});
+logText.alignment = ["fill", "fill"];
+// 移除固定高度，让它自动填充
+
+// ========== 分隔线 ==========
+var separator = mainTab.add("panel");
+separator.preferredSize.height = 1;
+
+// ========== 控制操作区域 ==========
+var controlContainer = mainTab.add("group");
+controlContainer.orientation = "column";
+controlContainer.alignChildren = ["fill", "top"];
+controlContainer.spacing = 4; // 减少间距
+controlContainer.margins = [3, 2, 3, 2]; // 减少边距
+controlContainer.preferredSize.height = 50; // 限制控制区域高度
+
+// 自动运行控制行
+var autoRunRow = controlContainer.add("group");
+autoRunRow.orientation = "row";
+autoRunRow.alignChildren = ["left", "center"];
+autoRunRow.spacing = 6;
+
+var autoRunCheckbox = autoRunRow.add("checkbox", undefined, "🔄 自动运行");
 autoRunCheckbox.value = true;
 
-// Add manual check button
-var checkButton = mainTab.add("button", undefined, "Check for Commands Now");
+var statusLabel = autoRunRow.add("statictext", undefined, "| 状态：活跃");
+
+// 手动操作按钮行
+var buttonRow = controlContainer.add("group");
+buttonRow.orientation = "row";
+buttonRow.alignChildren = ["fill", "center"];
+buttonRow.spacing = 4;
+
+var checkButton = buttonRow.add("button", undefined, "🔍 立即检查");
+checkButton.alignment = ["fill", "center"];
+checkButton.preferredSize.height = 26;
 
 // ========== 测试函数控制选项卡 ==========
-var testTab = tabPanel.add("tab", undefined, "测试函数控制");
+var testTab = tabPanel.add("tab", undefined, "🧪 测试控制");
 testTab.orientation = "column";
-testTab.alignChildren = ["fill", "top"];
-testTab.preferredSize.width = 650; // 减少宽度
-testTab.preferredSize.height = 400;
+testTab.alignChildren = ["fill", "fill"];
+testTab.spacing = 4;
+testTab.margins = 5;
+testTab.preferredSize.width = 325;
+testTab.preferredSize.height = 200;
 
-// 测试函数主控制区域
-var testMainControlGroup = testTab.add("panel", undefined, "主控制");
-testMainControlGroup.orientation = "row";
-testMainControlGroup.alignChildren = ["left", "center"];
-testMainControlGroup.preferredSize.height = 60; // 减少高度
+// ========== 快速操作栏 ==========
+var quickActionBar = testTab.add("group");
+quickActionBar.orientation = "row";
+quickActionBar.alignChildren = ["fill", "center"];
+quickActionBar.spacing = 3;
+quickActionBar.preferredSize.height = 30;
 
-// 左侧：批量控制
-var leftControlGroup = testMainControlGroup.add("group");
-leftControlGroup.orientation = "column";
-leftControlGroup.alignChildren = ["left", "top"];
+var executeAllBtn = quickActionBar.add("button", undefined, "🚀 执行测试");
+executeAllBtn.preferredSize.width = 100;
+executeAllBtn.preferredSize.height = 26;
 
-var batchLabel = leftControlGroup.add("statictext", undefined, "批量操作:");
-var batchButtonsGroup = leftControlGroup.add("group");
-batchButtonsGroup.orientation = "row";
-var toggleAllButton = batchButtonsGroup.add("button", undefined, "全部开关");
-var loadConfigButton = batchButtonsGroup.add("button", undefined, "加载配置");
-var saveConfigButton = batchButtonsGroup.add("button", undefined, "保存配置");
+var toggleAllBtn = quickActionBar.add("button", undefined, "🔄 全选");
+toggleAllBtn.preferredSize.width = 70;
+toggleAllBtn.preferredSize.height = 26;
 
-// 右侧：一键测试区域
-var rightControlGroup = testMainControlGroup.add("group");
-rightControlGroup.orientation = "column";
-rightControlGroup.alignChildren = ["right", "top"];
+var configBtn = quickActionBar.add("button", undefined, "⚙️ 配置");
+configBtn.preferredSize.width = 60;
+configBtn.preferredSize.height = 26;
 
-var runAllTestsButton = rightControlGroup.add("button", undefined, "🚀 执行所有启用的测试");
-runAllTestsButton.preferredSize.width = 180; // 减少宽度
-runAllTestsButton.preferredSize.height = 35;
+// ========== 批量操作区域 ==========
+var batchPanel = testTab.add("panel", undefined, "⚙️ 批量操作");
+batchPanel.orientation = "row";
+batchPanel.alignChildren = ["fill", "center"];
+batchPanel.preferredSize.height = 32;
+batchPanel.spacing = 2;
+batchPanel.margins = 2;
 
-// 测试状态显示
+var loadConfigButton = batchPanel.add("button", undefined, "📂 载入");
+loadConfigButton.preferredSize.width = 50;
+loadConfigButton.preferredSize.height = 24;
+
+var saveConfigButton = batchPanel.add("button", undefined, "💾 保存");
+saveConfigButton.preferredSize.width = 50;
+saveConfigButton.preferredSize.height = 24;
+
+// 状态显示
+var statusDisplay = batchPanel.add("statictext", undefined, "📊 准备就绪");
+statusDisplay.alignment = ["fill", "center"];
+
+// ========== 测试状态显示 ==========
 var testStatusGroup = testTab.add("group");
 testStatusGroup.orientation = "row";
 testStatusGroup.alignChildren = ["fill", "center"];
-var testProgressText = testStatusGroup.add("statictext", undefined, "准备就绪");
-testProgressText.preferredSize.width = 400;
+testStatusGroup.preferredSize.height = 16;
 
-// 测试函数分类选择面板 - 紧凑的网格布局
-var categoryPanel = testTab.add("panel", undefined, "测试函数分类选择");
+var testProgressText = testStatusGroup.add("statictext", undefined, "📊 准备就绪");
+testProgressText.alignment = ["fill", "center"];
+
+// ========== 测试函数分类选择面板 ==========
+var categoryPanel = testTab.add("panel", undefined, "📋 测试函数选择");
 categoryPanel.orientation = "column";
-categoryPanel.alignChildren = ["fill", "top"];
-categoryPanel.preferredSize.height = 220; // 进一步减少高度
+categoryPanel.alignChildren = ["fill", "fill"];
+categoryPanel.alignment = ["fill", "fill"]; // 确保填充剩余空间
+categoryPanel.spacing = 1;
+categoryPanel.margins = 1;
 
 var categoryControls = {};
 
 function createCompactCategoryControls() {
-    // 创建紧凑的2列网格布局
+    // 创建优化的2列网格布局
     var row1 = categoryPanel.add("group");
     row1.orientation = "row";
     row1.alignChildren = ["fill", "top"];
+    row1.spacing = 8;
     
     var row2 = categoryPanel.add("group");
     row2.orientation = "row";
     row2.alignChildren = ["fill", "top"];
+    row2.spacing = 8;
     
     var containers = [row1, row2];
     var categoryIndex = 0;
+    
+    // 类别图标映射
+    var categoryIcons = {
+        creation: "🏗️",
+        modification: "✏️", 
+        effects: "✨",
+        information: "📊",
+        batch: "⚡"
+    };
     
     for (var categoryKey in TestFunctionConfig.categories) {
         var category = TestFunctionConfig.categories[categoryKey];
         var container = containers[categoryIndex % 2];
         
-        var catGroup = container.add("group");
+        // 类别组容器
+        var catGroup = container.add("panel");
         catGroup.orientation = "column";
         catGroup.alignChildren = ["fill", "top"];
-        catGroup.preferredSize.width = 320; // 减少每列宽度
+        catGroup.preferredSize.width = 155;
+        catGroup.spacing = 2;
+        catGroup.margins = 2;
         
+        // 类别标题行
         var catHeader = catGroup.add("group");
         catHeader.orientation = "row";
+        catHeader.alignChildren = ["left", "center"];
         
-        var catCheckbox = catHeader.add("checkbox", undefined, getCategoryDisplayName(categoryKey));
+        var icon = categoryIcons[categoryKey] || "📁";
+        var catCheckbox = catHeader.add("checkbox", undefined, icon + " " + getCategoryDisplayName(categoryKey));
         catCheckbox.value = category.enabled;
         
         categoryControls[categoryKey] = {
@@ -703,15 +804,16 @@ function createCompactCategoryControls() {
             functions: {}
         };
         
-        // 函数控制 - 更紧凑的布局
+        // 函数控制 - 优化布局
         for (var funcKey in category.functions) {
             var func = category.functions[funcKey];
             var funcGroup = catGroup.add("group");
             funcGroup.orientation = "row";
             funcGroup.alignment = ["fill", "top"];
-            funcGroup.margins = [10, 0, 0, 0]; // 进一步减少缩进
+            funcGroup.margins = [15, 0, 0, 0];
+            funcGroup.spacing = 3;
             
-            var funcCheckbox = funcGroup.add("checkbox", undefined, func.description);
+            var funcCheckbox = funcGroup.add("checkbox", undefined, "• " + func.description);
             funcCheckbox.value = func.enabled;
             
             categoryControls[categoryKey].functions[funcKey] = funcCheckbox;
@@ -724,21 +826,55 @@ function createCompactCategoryControls() {
 createCompactCategoryControls();
 
 // ========== 按钮事件处理 ==========
+// 日志清空按钮
+logClearBtn.onClick = function() {
+    logBuffer = [];
+    if (logText) {
+        logText.text = "";
+        logInfo("日志已清空", "USER_ACTION");
+    }
+};
+
 // 主控制按钮事件
 checkButton.onClick = function() {
     logInfo("手动检查命令...", "USER_ACTION");
     checkForCommands();
 };
 
-// 一键测试按钮事件
-runAllTestsButton.onClick = function() {
+// 快速执行按钮（原runAllTestsButton功能）
+executeAllBtn.onClick = function() {
     logInfo("开始执行所有启用的测试函数...", "USER_ACTION");
     executeAllEnabledTests();
 };
 
+// 配置按钮下拉菜单功能
+configBtn.onClick = function() {
+    // 创建配置菜单
+    var configMenu = [
+        {text: "📂 加载配置", onClick: function() { loadTestConfig(); }},
+        {text: "💾 保存配置", onClick: function() { saveTestConfig(); }},
+        {text: "🗑️ 清理日志", onClick: function() { cleanupAllOldLogFiles(); }},
+        {text: "🔄 重置配置", onClick: function() { 
+            // 重置所有配置到默认状态
+            for (var categoryKey in TestFunctionConfig.categories) {
+                TestFunctionConfig.categories[categoryKey].enabled = true;
+                for (var funcKey in TestFunctionConfig.categories[categoryKey].functions) {
+                    TestFunctionConfig.categories[categoryKey].functions[funcKey].enabled = true;
+                }
+            }
+            updateTestConfigUI();
+            logInfo("配置已重置为默认状态", "CONFIG");
+        }}
+    ];
+    
+    // 简化版菜单，直接执行加载配置
+    loadTestConfig();
+};
+
 // ========== 事件处理 ==========
-// 简化的批量操作
+// 简化的批量操作（重新映射toggleAllButton）
 var allEnabled = true;
+var toggleAllButton = toggleAllBtn; // 重新映射变量名
 toggleAllButton.onClick = function() {
     allEnabled = !allEnabled;
     
@@ -750,9 +886,13 @@ toggleAllButton.onClick = function() {
     }
     updateTestConfigUI();
     
-    this.text = allEnabled ? "全部禁用" : "全部启用";
+    // 动态更新按钮文字
+    this.text = allEnabled ? "🔄 全选" : "🔄 全选";
     logInfo("批量" + (allEnabled ? "启用" : "禁用") + "所有测试函数", "CONFIG");
 };
+
+// 重新映射原有按钮
+var runAllTestsButton = executeAllBtn; // 保持兼容性
 
 loadConfigButton.onClick = function() {
     loadTestConfig();
@@ -760,6 +900,28 @@ loadConfigButton.onClick = function() {
 
 saveConfigButton.onClick = function() {
     saveTestConfig();
+};
+
+// 自动运行复选框事件
+autoRunCheckbox.onClick = function() {
+    // 更新状态指示器颜色和文本
+    try {
+        if (this.value) {
+            // 绿色表示活跃
+            statusIndicator.graphics.foregroundColor = statusIndicator.graphics.newPen(statusIndicator.graphics.PenType.SOLID_COLOR, [0, 0.8, 0], 1);
+            statusText.text = "Ready - Auto-run is ON";
+            statusLabel.text = "| 状态：活跃";
+            logInfo("自动运行已启用", "USER_ACTION");
+        } else {
+            // 橙色表示暂停
+            statusIndicator.graphics.foregroundColor = statusIndicator.graphics.newPen(statusIndicator.graphics.PenType.SOLID_COLOR, [1, 0.5, 0], 1);
+            statusText.text = "Ready - Auto-run is OFF";
+            statusLabel.text = "| 状态：暂停";
+            logInfo("自动运行已禁用", "USER_ACTION");
+        }
+    } catch (e) {
+        logWarn("更新状态指示器失败: " + e.toString(), "UI");
+    }
 };
 
 // 类别复选框事件
@@ -1100,6 +1262,12 @@ function prepareTestEnvironment(requiresEnvironment, createEnvironment) {
 // ========== MCP核心处理函数 ==========
 function checkForCommands() {
     try {
+        // 添加对象有效性检查
+        if (typeof panel === "undefined" || !panel) {
+            logDebug("面板对象尚未初始化，跳过命令检查", "MCP");
+            return false;
+        }
+        
         var commandFile = new File(getCommandFilePath());
         
         if (!commandFile.exists) {
@@ -1193,6 +1361,17 @@ function writeResult(result) {
 }
 
 function executeAllEnabledTests() {
+    // 添加界面对象有效性检查
+    try {
+        if (typeof testProgressText === "undefined" || !testProgressText) {
+            logError("测试界面尚未完全初始化，无法执行批量测试", "TEST");
+            return;
+        }
+    } catch (e) {
+        logError("界面对象检查失败: " + e.toString(), "TEST");
+        return;
+    }
+    
     testProgressText.text = "正在执行测试...";
     
     var totalTests = 0;
@@ -1486,8 +1665,14 @@ function executeAllEnabledTests() {
 
 // ========== 自动轮询系统 ==========
 function startAutoRunner() {
-    if (autoRunCheckbox.value) {
-        checkForCommands();
+    // 添加对象有效性检查
+    try {
+        if (typeof autoRunCheckbox !== "undefined" && autoRunCheckbox && autoRunCheckbox.value) {
+            checkForCommands();
+        }
+    } catch (e) {
+        // 如果界面还没完全初始化，跳过这次检查
+        logDebug("界面尚未完全初始化，跳过命令检查: " + e.toString(), "AUTO_RUNNER");
     }
     
     // 设置下次检查
@@ -1499,7 +1684,6 @@ logInfo("MCP Bridge Auto (Enhanced) 已启动 - 包含完整功能和测试控�
 logInfo("新增功能: 文件日志系统、自动滚动日志、优化UI布局", "STARTUP");
 logInfo("日志文件位置: " + getTempDirectory().fsName, "STARTUP");
 logInfo("日志级别: DEBUG, INFO, WARN, ERROR, TEST", "STARTUP");
-statusText.text = "Ready - Auto-run is " + (autoRunCheckbox.value ? "ON" : "OFF");
 
 // 初始化日志清理
 cleanupOldLogFiles();
@@ -1518,14 +1702,26 @@ try {
     logError("命令日志系统测试失败: " + cmdLogError.toString(), "COMMAND_LOG");
 }
 
-// 启动自动轮询系统
-logInfo("启动自动轮询系统", "STARTUP");
-startAutoRunner();
-
-// 显示面板
+// 显示面板 - 确保界面完全初始化
 panel.show();
 
-logInfo("MCP Bridge Auto (Enhanced) 初始化完成", "STARTUP");
+// 等待界面完全初始化后再设置状态和启动轮询
+app.setTimeout(function() {
+    try {
+        // 设置状态文本
+        if (typeof statusText !== "undefined" && statusText && typeof autoRunCheckbox !== "undefined" && autoRunCheckbox) {
+            statusText.text = "Ready - Auto-run is " + (autoRunCheckbox.value ? "ON" : "OFF");
+        }
+        
+        // 启动自动轮询系统
+        logInfo("启动自动轮询系统", "STARTUP");
+        startAutoRunner();
+        
+        logInfo("MCP Bridge Auto (Enhanced) 初始化完成", "STARTUP");
+    } catch (initError) {
+        logError("延迟初始化失败: " + initError.toString(), "STARTUP");
+    }
+}, 100); // 延迟100毫秒确保界面完全初始化
 
 // 命令日志写入函数
 function writeCommandLog(message) {

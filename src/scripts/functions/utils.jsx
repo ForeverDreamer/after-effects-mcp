@@ -163,7 +163,7 @@ function validateSingleParameterType(value, type, paramSchema, paramName) {
                 break;
                 
             case "array":
-                if (!(Array.isArray && Array.isArray(value)) && Object.prototype.toString.call(value) !== '[object Array]') {
+                if (!isArray(value)) {
                     return { error: paramName + " must be an array" };
                 }
                 if (paramSchema.minLength && value.length < paramSchema.minLength) {
@@ -175,7 +175,7 @@ function validateSingleParameterType(value, type, paramSchema, paramName) {
                 break;
                 
             case "object":
-                if (typeof value !== "object" || value === null || (Array.isArray && Array.isArray(value))) {
+                if (typeof value !== "object" || value === null || isArray(value)) {
                     return { error: paramName + " must be an object" };
                 }
                 break;
@@ -396,4 +396,13 @@ function isEmptyObject(obj) {
         return true;
     }
     return getObjectKeys(obj).length === 0;
+}
+
+/**
+ * ExtendScript兼容的数组检查函数
+ * @param {*} obj - 要检查的对象
+ * @returns {boolean} 如果是数组返回true，否则返回false
+ */
+function isArray(obj) {
+    return Object.prototype.toString.call(obj) === '[object Array]';
 } 

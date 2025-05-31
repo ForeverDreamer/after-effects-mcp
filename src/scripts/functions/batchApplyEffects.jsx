@@ -121,7 +121,7 @@ function batchApplyEffects(args) {
                     errors.push("Application " + (i + 1) + ": valid layerIndex is required");
                 }
                 
-                // 特效类型特定验证
+                // 修复：特效类型特定验证逻辑
                 if (app.type === "effect") {
                     if (!app.effectName && !app.effectMatchName && !app.presetPath) {
                         errors.push("Application " + (i + 1) + ": effect type requires effectName, effectMatchName, or presetPath");
@@ -235,7 +235,7 @@ function batchApplyEffects(args) {
                                 });
                                 
                                 if (!chainResult.success) {
-                                    throw new Error("Chain effect " + (j + 1) + " failed: " + chainResult.error);
+                                    throw new Error("Failed to apply effect " + (j + 1) + " in chain: " + chainResult.error);
                                 }
                                 appliedEffects.push(chainResult.effect);
                             }
@@ -279,8 +279,38 @@ function batchApplyEffects(args) {
                 validateOnly: validateOnly
             });
             
-            // 修复：processBatchOperation 返回的是标准响应格式，需要从data字段获取真实数据
-            var resultData = batchResult.data || {};
+            // 修复：正确处理batchResult返回值结构
+            var resultData;
+            if (batchResult && typeof batchResult === 'object') {
+                // 检查是否有data属性，如果没有就使用batchResult本身
+                resultData = batchResult.data || batchResult;
+                
+                // 确保结果数据有必需的属性
+                if (!resultData.hasOwnProperty('totalItems')) {
+                    resultData.totalItems = applications.length;
+                }
+                if (!resultData.hasOwnProperty('successful')) {
+                    resultData.successful = 0;
+                }
+                if (!resultData.hasOwnProperty('failed')) {
+                    resultData.failed = 0;
+                }
+                if (!resultData.hasOwnProperty('results')) {
+                    resultData.results = [];
+                }
+                if (!resultData.hasOwnProperty('errors')) {
+                    resultData.errors = [];
+                }
+            } else {
+                // 如果batchResult为空或无效，创建默认结构
+                resultData = {
+                    totalItems: applications.length,
+                    successful: 0,
+                    failed: applications.length,
+                    results: [],
+                    errors: ["Batch operation returned invalid result"]
+                };
+            }
             
             var finalStatus = "success";
             var finalMessage = validateOnly ? "Validation completed" : "Batch effect application completed";

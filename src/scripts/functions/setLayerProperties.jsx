@@ -147,28 +147,71 @@ function setLayerProperties(args) {
         
         // Find the layer
         var layer = null;
+        var layerSearchInfo = "";
+        
         if (params.layerIndex !== undefined && params.layerIndex !== null) {
             if (params.layerIndex > 0 && params.layerIndex <= comp.numLayers) { 
                 layer = comp.layer(params.layerIndex); 
+                layerSearchInfo = "by index " + params.layerIndex;
             } else { 
                 return JSON.stringify({
                     status: "error",
-                    message: "Layer index out of bounds: " + params.layerIndex
+                    message: "Layer index out of bounds: " + params.layerIndex + " (composition has " + comp.numLayers + " layers)"
                 }, null, 2);
             }
         } else if (params.layerName) {
+            // 改进的图层名称搜索逻辑  
+            layerSearchInfo = "by name '" + params.layerName + "'";
             for (var j = 1; j <= comp.numLayers; j++) {
-                if (comp.layer(j).name === params.layerName) { 
-                    layer = comp.layer(j); 
+                var currentLayer = comp.layer(j);
+                if (currentLayer.name === params.layerName) { 
+                    layer = currentLayer; 
                     break; 
                 }
+            }
+            
+            // 如果未找到，提供更详细的调试信息和建议
+            if (!layer) {
+                var availableLayerNames = [];
+                var closeMatches = [];
+                
+                // 收集所有可用图层名称，并检查相似名称
+                for (var k = 1; k <= comp.numLayers; k++) {
+                    var layerName = comp.layer(k).name;
+                    availableLayerNames.push("'" + layerName + "'");
+                    
+                    // 检查是否包含搜索字符串
+                    if (layerName.toLowerCase().indexOf(params.layerName.toLowerCase()) !== -1) {
+                        closeMatches.push("'" + layerName + "'");
+                    }
+                }
+                
+                var errorMessage = "Layer not found: '" + params.layerName + "'";
+                var errorDetails = {
+                    status: "error",
+                    message: errorMessage,
+                    searchedName: params.layerName,
+                    totalLayers: comp.numLayers,
+                    compositionName: comp.name,
+                    availableLayers: availableLayerNames
+                };
+                
+                // 如果有相似的名称，添加建议
+                if (closeMatches.length > 0) {
+                    errorDetails.suggestions = closeMatches;
+                    errorDetails.message += ". Did you mean: " + closeMatches.join(", ") + "?";
+                } else {
+                    errorDetails.message += ". Available layers: " + availableLayerNames.join(", ");
+                }
+                
+                return JSON.stringify(errorDetails, null, 2);
             }
         }
         
         if (!layer) { 
             return JSON.stringify({
                 status: "error",
-                message: "Layer not found: " + (params.layerName || "index " + params.layerIndex)
+                message: "Layer not found " + layerSearchInfo + " in composition '" + comp.name + "'"
             }, null, 2);
         }
         

@@ -196,13 +196,7 @@ function batchSetLayerKeyframes(args) {
                         results.successful++;
                     } else {
                         // 实际设置关键帧
-                        var setResult = setLayerKeyframe(
-                            keyframeConfig.compName,
-                            keyframeConfig.layerIndex,
-                            keyframeConfig.propertyName,
-                            keyframeConfig.timeInSeconds,
-                            keyframeConfig.value
-                        );
+                        var setResult = setLayerKeyframe(keyframeConfig);
                         var parsedResult = JSON.parse(setResult);
                         
                         if (parsedResult.success) {

@@ -72,54 +72,35 @@ var SET_LAYER_KEYFRAME_SCHEMA = {
     ]
 };
 
-function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, value) {
+// ========== 日志级别控制 ==========
+var LOG_LEVEL = {
+    ERROR: 0,
+    WARN: 1,
+    INFO: 2,
+    DEBUG: 3
+};
+
+// 当前日志级别（可通过全局变量控制）
+var CURRENT_LOG_LEVEL = typeof GLOBAL_LOG_LEVEL !== 'undefined' ? GLOBAL_LOG_LEVEL : LOG_LEVEL.INFO;
+
+function logWithLevel(level, message) {
+    if (level <= CURRENT_LOG_LEVEL) {
+        logAlert(message);
+    }
+}
+
+// 自定义数组检查函数，兼容ExtendScript
+function isArray(obj) {
+    return Object.prototype.toString.call(obj) === '[object Array]';
+}
+
+function setLayerKeyframe(args) {
     try {
-        logAlert("DEBUG: setLayerKeyframe 函数开始执行");
-        
-        // 安全的值转换，避免数组toString()导致的除零错误
-        var valueStr = "";
-        var valueType = typeof value;
-        try {
-            if (value instanceof Array) {
-                valueStr = "[" + value.join(",") + "]";
-                valueType = "array";
-            } else {
-                valueStr = String(value);
-            }
-        } catch (conversionError) {
-            valueStr = "无法转换";
-            valueType = typeof value;
-        }
-        
-        logAlert("DEBUG: 原始参数 - compName='" + compName + "', layerIndex=" + layerIndex + ", propertyName='" + propertyName + "', timeInSeconds=" + timeInSeconds + ", value=" + valueStr + " (type: " + valueType + ")");
-        
-        // 添加数组类型检查
-        if (value instanceof Array) {
-            logAlert("DEBUG: 检测到数组参数，长度: " + value.length + ", 内容: [" + value.join(",") + "]");
-        }
-        
-        // 构建参数对象进行验证
-        var args = {
-            compName: compName,
-            layerIndex: layerIndex,
-            propertyName: propertyName,
-            timeInSeconds: timeInSeconds,
-            value: value
-        };
-        
-        logAlert("DEBUG: 开始参数验证...");
+        logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: setLayerKeyframe 函数开始执行");
         
         // 参数验证
-        try {
-            var validation = validateParameters(args, SET_LAYER_KEYFRAME_SCHEMA);
-            logAlert("DEBUG: validateParameters调用完成");
-        } catch (validationError) {
-            logAlert("DEBUG: validateParameters调用失败: " + validationError.toString());
-            throw validationError;
-        }
-        
+        var validation = validateParameters(args, SET_LAYER_KEYFRAME_SCHEMA);
         if (!validation.isValid) {
-            logAlert("DEBUG: 参数验证失败 - " + validation.errors.join(", "));
             return JSON.stringify({
                 success: false,
                 message: "Parameter validation failed",
@@ -128,22 +109,40 @@ function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, val
             }, null, 2);
         }
         
-        logAlert("DEBUG: 参数验证成功");
-        
         // 使用验证后的参数
         var params = validation.normalizedArgs;
         
-        // 调试信息：查看实际的参数值
-        logAlert("调试信息 - 参数类型: compName=" + typeof params.compName + 
-                ", layerIndex=" + typeof params.layerIndex + 
-                ", propertyName=" + typeof params.propertyName + 
-                ", timeInSeconds=" + typeof params.timeInSeconds + 
-                ", value=" + typeof params.value);
-        logAlert("调试信息 - 参数值: compName='" + params.compName + 
-                "', layerIndex=" + params.layerIndex + 
-                ", propertyName='" + params.propertyName + 
-                "', timeInSeconds=" + params.timeInSeconds + 
-                ", value=" + (params.value instanceof Array ? "[" + params.value.join(",") + "]" : params.value));
+        // 仅在DEBUG级别显示详细参数信息
+        logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 原始参数 - compName='" + params.compName + "', layerIndex=" + params.layerIndex + ", propertyName='" + params.propertyName + "', timeInSeconds=" + params.timeInSeconds + ", value=" + (isArray(params.value) ? "[" + params.value.join(",") + "]" : params.value) + " (type: " + (isArray(params.value) ? "array" : typeof params.value) + ")");
+        
+        if (isArray(params.value)) {
+            logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 检测到数组参数，长度: " + params.value.length + ", 内容: [" + params.value.join(",") + "]");
+        }
+        
+        logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 开始参数验证...");
+        
+        // 验证参数类型
+        if (typeof params.compName !== "string") {
+            return JSON.stringify({ success: false, message: "compName must be a string" });
+        }
+        if (typeof params.layerIndex !== "number" || params.layerIndex < 1) {
+            return JSON.stringify({ success: false, message: "layerIndex must be a positive integer" });
+        }
+        if (typeof params.propertyName !== "string" || params.propertyName.length === 0) {
+            return JSON.stringify({ success: false, message: "propertyName must be a non-empty string" });
+        }
+        if (typeof params.timeInSeconds !== "number" || params.timeInSeconds < 0) {
+            return JSON.stringify({ success: false, message: "timeInSeconds must be a non-negative number" });
+        }
+        if (params.value === undefined || params.value === null) {
+            return JSON.stringify({ success: false, message: "value is required" });
+        }
+        
+        logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: validateParameters调用完成");
+        logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 参数验证成功");
+        
+        // 移除冗长的参数调试信息，仅在DEBUG模式下简化显示
+        logWithLevel(LOG_LEVEL.DEBUG, "参数: " + params.propertyName + " @ " + params.timeInSeconds + "s = " + (isArray(params.value) ? "[" + params.value.join(",") + "]" : params.value));
         
         // Find the composition using utility function
         var compResult = getCompositionByName(params.compName);
@@ -151,11 +150,14 @@ function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, val
             return JSON.stringify({ success: false, message: compResult.error });
         }
         var comp = compResult.composition;
+        
         if (!comp || !(comp instanceof CompItem)) {
-            return JSON.stringify({ success: false, message: "Composition not found" });
+            return JSON.stringify({ 
+                success: false, 
+                message: "合成验证失败: 无效的合成对象 (compName='" + params.compName + "')" 
+            });
         }
         
-        // 检查合成是否有图层
         if (comp.numLayers === 0) {
             return JSON.stringify({ 
                 success: false, 
@@ -181,91 +183,63 @@ function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, val
              return JSON.stringify({ success: false, message: "Transform properties not found for layer '" + layer.name + "' (type: " + layer.matchName + ")." });
         }
 
-        logAlert("DEBUG: 查找属性 '" + params.propertyName + "'...");
+        logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 查找属性 '" + params.propertyName + "'...");
         
         var property = null;
         
         // 首先尝试在Transform组中查找
         property = transformGroup.property(params.propertyName);
-        logAlert("DEBUG: 在Transform组中查找结果: " + (property ? "找到" : "未找到"));
+        logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 在Transform组中查找结果: " + (property ? "找到" : "未找到"));
         
         // 如果在Transform组中没有找到，尝试直接在图层上查找
         if (!property) {
             property = layer.property(params.propertyName);
-            logAlert("DEBUG: 在图层直接属性中查找结果: " + (property ? "找到" : "未找到"));
+            logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 在图层直接属性中查找结果: " + (property ? "找到" : "未找到"));
         }
         
         // 如果还是没有找到，尝试在Effects或Text组中查找
         if (!property) {
              if (layer.property("Effects") && layer.property("Effects").property(params.propertyName)) {
                  property = layer.property("Effects").property(params.propertyName);
-                 logAlert("DEBUG: 在Effects组中找到属性");
+                 logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 在Effects组中找到属性");
              } else if (layer.property("Text") && layer.property("Text").property(params.propertyName)) {
                  property = layer.property("Text").property(params.propertyName);
-                 logAlert("DEBUG: 在Text组中找到属性");
+                 logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 在Text组中找到属性");
             }
         }
 
         if (!property) {
-             logAlert("DEBUG: 属性 '" + params.propertyName + "' 在所有位置都未找到");
+             logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 属性 '" + params.propertyName + "' 在所有位置都未找到");
              return JSON.stringify({ success: false, message: "Property '" + params.propertyName + "' not found on layer '" + layer.name + "'." });
         }
         
-        logAlert("DEBUG: 属性找到，检查是否可以设置关键帧...");
+        logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: 属性找到，检查是否可以设置关键帧...");
 
         if (!property.canVaryOverTime) {
              return JSON.stringify({ success: false, message: "Property '" + params.propertyName + "' cannot be keyframed." });
         }
 
-        // 验证value类型是否匹配属性要求
-        var expectedDimensions = property.value.length;
-        if (typeof expectedDimensions !== 'undefined') {
-            // 这是一个多维属性（如Position, Scale, Anchor Point）
-            if (!(params.value instanceof Array)) {
-                return JSON.stringify({ 
-                    success: false, 
-                    message: "Property '" + params.propertyName + "' requires an array value with " + expectedDimensions + " dimensions, but got: " + typeof params.value 
-                });
+        // 获取属性维度信息（用于验证值的格式）
+        var propertyDimensions = 1; // 默认单维
+        try {
+            if (property.value && isArray(property.value)) {
+                propertyDimensions = property.value.length;
             }
-            if (params.value.length !== expectedDimensions) {
-                return JSON.stringify({ 
-                    success: false, 
-                    message: "Property '" + params.propertyName + "' requires " + expectedDimensions + " dimensions, but got " + params.value.length 
-                });
-            }
-        } else {
-            // 这是一个单维属性（如Opacity, Rotation）
-            if (params.value instanceof Array) {
-                return JSON.stringify({ 
-                    success: false, 
-                    message: "Property '" + params.propertyName + "' requires a single number value, but got an array" 
-                });
-            }
-            if (typeof params.value !== 'number') {
-                return JSON.stringify({ 
-                    success: false, 
-                    message: "Property '" + params.propertyName + "' requires a number value, but got: " + typeof params.value 
-                });
-            }
+        } catch (e) {
+            // 如果无法获取当前值，使用默认维度
         }
+        
+        // 简化关键帧设置信息，仅在DEBUG级别显示
+        logWithLevel(LOG_LEVEL.DEBUG, "设置关键帧: " + params.propertyName + " @ " + params.timeInSeconds + "s = " + (isArray(params.value) ? "[" + params.value.join(",") + "]" : params.value) + " (维度: " + (propertyDimensions > 1 ? propertyDimensions : "1") + ")");
 
-        // 确保属性有至少一个关键帧，如果没有则创建一个
-        if (property.numKeys === 0 && !property.isTimeVarying) {
-             property.setValueAtTime(comp.time, property.value);
-        }
-
-        // 调试信息：查看即将设置的关键帧值
-        logAlert("调试信息 - 即将设置关键帧: 属性='" + params.propertyName + 
-                "', 时间=" + params.timeInSeconds + 
-                ", 值类型=" + typeof params.value + 
-                ", 值内容=" + (params.value instanceof Array ? "[" + params.value.join(",") + "]" : params.value) +
-                ", 属性维度=" + (typeof property.value.length !== 'undefined' ? property.value.length : "单维"));
-
-        // 对于Opacity属性，需要将0-100的值转换为0-1的范围
+        // 处理特殊属性值转换
         var finalValue = params.value;
-        if (params.propertyName === "Opacity" && typeof params.value === "number") {
-            finalValue = params.value / 100.0;
-            logAlert("DEBUG: Opacity值转换 - 原值: " + params.value + ", 转换后: " + finalValue);
+        if (params.propertyName === "Opacity") {
+            // 透明度需要从百分比转换为0-1范围
+            if (typeof params.value === "number") {
+                finalValue = params.value / 100.0;
+                logWithLevel(LOG_LEVEL.DEBUG, "DEBUG: Opacity值转换 - 原值: " + params.value + ", 转换后: " + finalValue);
+            }
         }
 
         // 设置关键帧
@@ -279,36 +253,17 @@ function setLayerKeyframe(compName, layerIndex, propertyName, timeInSeconds, val
                 layerName: layer.name,
                 propertyName: params.propertyName,
                 timeInSeconds: params.timeInSeconds,
-                value: params.value,
-                propertyDimensions: expectedDimensions || 1
+                value: params.value, // 返回原始值
+                propertyDimensions: propertyDimensions
             }
         });
     } catch (e) {
         return JSON.stringify({ 
             success: false, 
-            message: "Error setting keyframe: " + e.toString() + " (Line: " + e.line + ")" 
+            message: "Error setting keyframe: " + e.toString() + (e.line ? " (Line: " + e.line + ")" : "")
         });
     }
-} 
-
-// ========== 手动测试调用代码 ==========
-// 取消下面的注释来手动测试
-
-// 测试设置透明度关键帧
-// var result1 = setLayerKeyframe("", 1, "Opacity", 1.0, 50);
-// alert("Opacity Test Result:\n" + result1);
-
-// 测试设置缩放关键帧（修复前可能导致卡死的情况）
-// var result2 = setLayerKeyframe("", 1, "Scale", 2.0, [120, 120, 100]);
-// alert("Scale Test Result:\n" + result2);
-
-// 测试设置位置关键帧
-// var result3 = setLayerKeyframe("", 1, "Position", 3.0, [960, 540, 0]);
-// alert("Position Test Result:\n" + result3);
-
-// 测试错误情况：Scale使用单个数字（这应该会报错）
-// var result4 = setLayerKeyframe("", 1, "Scale", 4.0, 100);
-// alert("Scale Error Test Result:\n" + result4);
+}
 
 // 一键测试所有情况的函数
 function testAllKeyframes() {
@@ -317,27 +272,57 @@ function testAllKeyframes() {
     try {
         // 测试1: 透明度
         results.push("=== 测试透明度关键帧 ===");
-        var result1 = setLayerKeyframe("", 1, "Opacity", 1.0, 50);
+        var result1 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Opacity",
+            timeInSeconds: 1.0,
+            value: 50
+        });
         results.push("结果: " + result1);
         
         // 测试2: 缩放（正确的3维数组格式）
         results.push("\n=== 测试缩放关键帧（正确格式）===");
-        var result2 = setLayerKeyframe("", 1, "Scale", 2.0, [120, 120, 100]);
+        var result2 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Scale",
+            timeInSeconds: 2.0,
+            value: [120, 120, 100]
+        });
         results.push("结果: " + result2);
         
         // 测试3: 位置（正确的3维数组格式）
         results.push("\n=== 测试位置关键帧 ===");
-        var result3 = setLayerKeyframe("", 1, "Position", 3.0, [960, 540, 0]);
+        var result3 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Position",
+            timeInSeconds: 3.0,
+            value: [960, 540, 0]
+        });
         results.push("结果: " + result3);
         
         // 测试4: 错误情况 - Scale使用单个数字
         results.push("\n=== 测试缩放关键帧（错误格式）===");
-        var result4 = setLayerKeyframe("", 1, "Scale", 4.0, 100);
+        var result4 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Scale",
+            timeInSeconds: 4.0,
+            value: 100
+        });
         results.push("结果: " + result4);
         
         // 测试5: 旋转测试
         results.push("\n=== 测试旋转关键帧 ===");
-        var result5 = setLayerKeyframe("", 1, "Rotation", 5.0, 45);
+        var result5 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Rotation",
+            timeInSeconds: 5.0,
+            value: 45
+        });
         results.push("结果: " + result5);
         
     } catch (e) {
@@ -359,10 +344,16 @@ function testSetLayerKeyframe() {
     try {
         logAlert("开始测试 setLayerKeyframe 函数...");
         
-        // 测试用例1: 设置透明度关键帧 - 修复：确保使用数值
+        // 测试用例1: 设置透明度关键帧 - 修复：使用对象参数
         testCount++;
         logAlert("测试透明度关键帧设置...");
-        var result1 = setLayerKeyframe("", 1, "Opacity", 1.0, 100);
+        var result1 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Opacity",
+            timeInSeconds: 1.0,
+            value: 100
+        });
         logAlert("透明度关键帧测试结果:\n" + result1);
         
         try {
@@ -376,10 +367,16 @@ function testSetLayerKeyframe() {
             failureDetails.push("透明度测试结果解析失败");
         }
         
-        // 测试用例2: 设置位置关键帧 - 修复：使用3维数组
+        // 测试用例2: 设置位置关键帧 - 修复：使用对象参数和3维数组
         testCount++;
         logAlert("测试位置关键帧设置...");
-        var result2 = setLayerKeyframe("", 1, "Position", 2.0, [960, 540, 0]);
+        var result2 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Position",
+            timeInSeconds: 2.0,
+            value: [960, 540, 0]
+        });
         logAlert("位置关键帧测试结果:\n" + result2);
         
         try {
@@ -393,10 +390,16 @@ function testSetLayerKeyframe() {
             failureDetails.push("位置测试结果解析失败");
         }
         
-        // 测试用例3: 设置缩放关键帧 - 修复：使用3维数组
+        // 测试用例3: 设置缩放关键帧 - 修复：使用对象参数和3维数组
         testCount++;
         logAlert("测试缩放关键帧设置...");
-        var result3 = setLayerKeyframe("", 1, "Scale", 3.0, [150, 150, 100]);
+        var result3 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Scale",
+            timeInSeconds: 3.0,
+            value: [150, 150, 100]
+        });
         logAlert("缩放关键帧测试结果:\n" + result3);
         
         try {
@@ -410,10 +413,16 @@ function testSetLayerKeyframe() {
             failureDetails.push("缩放测试结果解析失败");
         }
         
-        // 测试用例4: 设置旋转关键帧 - 修复：确保使用数值
+        // 测试用例4: 设置旋转关键帧 - 修复：使用对象参数
         testCount++;
         logAlert("测试旋转关键帧设置...");
-        var result4 = setLayerKeyframe("", 1, "Rotation", 2.5, 45.0);
+        var result4 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Rotation",
+            timeInSeconds: 2.5,
+            value: 45.0
+        });
         logAlert("旋转关键帧测试结果:\n" + result4);
         
         try {
@@ -427,10 +436,16 @@ function testSetLayerKeyframe() {
             failureDetails.push("旋转测试结果解析失败");
         }
         
-        // 测试用例5: 设置锚点关键帧 - 修复：使用3维数组
+        // 测试用例5: 设置锚点关键帧 - 修复：使用对象参数和3维数组
         testCount++;
         logAlert("测试锚点关键帧设置...");
-        var result5 = setLayerKeyframe("", 1, "Anchor Point", 1.5, [100, 100, 0]);
+        var result5 = setLayerKeyframe({
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Anchor Point",
+            timeInSeconds: 1.5,
+            value: [100, 100, 0]
+        });
         logAlert("锚点关键帧测试结果:\n" + result5);
         
         try {
