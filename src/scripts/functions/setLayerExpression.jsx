@@ -1,4 +1,5 @@
 //@include "utils.jsx"
+//@include "layerOperations.jsx"
 
 // ========== 参数验证Schema ==========
 var SET_LAYER_EXPRESSION_SCHEMA = {
@@ -132,4 +133,81 @@ function setLayerExpression(args) {
             message: "Error setting expression: " + e.toString() + " (Line: " + e.line + ")" 
         });
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testSetLayerExpression() {
+    try {
+        logAlert("开始测试 setLayerExpression 函数...");
+        
+        // 测试用例1: 添加位置摆动表达式
+        var testArgs1 = {
+            compName: "",  // 使用当前活动合成
+            layerIndex: 1,
+            propertyName: "Position",
+            expressionString: "wiggle(2, 30)"
+        };
+        
+        logAlert("测试位置摆动表达式...");
+        var result1 = setLayerExpression(testArgs1);
+        logAlert("位置摆动表达式测试结果:\n" + result1);
+        
+        // 测试用例2: 添加缩放呼吸表达式
+        var testArgs2 = {
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Scale",
+            expressionString: "s = Math.sin(time * 2) * 10; [value[0] + s, value[1] + s]"
+        };
+        
+        logAlert("测试缩放呼吸表达式...");
+        var result2 = setLayerExpression(testArgs2);
+        logAlert("缩放呼吸表达式测试结果:\n" + result2);
+        
+        // 测试用例3: 添加旋转表达式
+        var testArgs3 = {
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Rotation",
+            expressionString: "time * 50"
+        };
+        
+        logAlert("测试旋转表达式...");
+        var result3 = setLayerExpression(testArgs3);
+        logAlert("旋转表达式测试结果:\n" + result3);
+        
+        // 测试用例4: 添加透明度闪烁表达式
+        var testArgs4 = {
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Opacity",
+            expressionString: "50 + Math.sin(time * 5) * 50"
+        };
+        
+        logAlert("测试透明度闪烁表达式...");
+        var result4 = setLayerExpression(testArgs4);
+        logAlert("透明度闪烁表达式测试结果:\n" + result4);
+        
+        // 测试用例5: 移除表达式
+        var testArgs5 = {
+            compName: "",
+            layerIndex: 1,
+            propertyName: "Position",
+            expressionString: ""
+        };
+        
+        logAlert("测试移除表达式...");
+        var result5 = setLayerExpression(testArgs5);
+        logAlert("移除表达式测试结果:\n" + result5);
+        
+        logAlert("setLayerExpression 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testSetLayerExpression(); 

@@ -224,4 +224,111 @@ function batchSetLayerProperties(args) {
             }
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testBatchSetLayerProperties() {
+    try {
+        logAlert("开始测试 batchSetLayerProperties 函数...");
+        
+        // 测试用例1: 批量调整图层位置和透明度
+        var testArgs1 = {
+            layerProperties: [
+                {
+                    compName: "",  // 使用当前活动合成
+                    layerIndex: 1,
+                    position: [400, 300],
+                    opacity: 80
+                },
+                {
+                    compName: "",
+                    layerIndex: 2,
+                    position: [600, 300],
+                    opacity: 60
+                }
+            ]
+        };
+        
+        logAlert("测试批量调整图层位置和透明度...");
+        var result1 = batchSetLayerProperties(testArgs1);
+        logAlert("位置透明度批量设置测试结果:\n" + result1);
+        
+        // 测试用例2: 批量修改图层时间属性
+        var testArgs2 = {
+            layerProperties: [
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    startTime: 1,
+                    duration: 5,
+                    scale: [120, 120]
+                },
+                {
+                    compName: "",
+                    layerIndex: 2,
+                    startTime: 2,
+                    duration: 4,
+                    rotation: 45
+                }
+            ]
+        };
+        
+        logAlert("测试批量修改图层时间属性...");
+        var result2 = batchSetLayerProperties(testArgs2);
+        logAlert("时间属性批量设置测试结果:\n" + result2);
+        
+        // 测试用例3: 仅验证模式
+        var testArgs3 = {
+            layerProperties: [
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    position: [960, 540],
+                    scale: [100, 100],
+                    opacity: 100
+                }
+            ],
+            validateOnly: true
+        };
+        
+        logAlert("测试仅验证模式...");
+        var result3 = batchSetLayerProperties(testArgs3);
+        logAlert("仅验证模式测试结果:\n" + result3);
+        
+        // 测试用例4: 错误处理（跳过错误）
+        var testArgs4 = {
+            layerProperties: [
+                {
+                    compName: "",
+                    layerIndex: 999,  // 不存在的图层索引
+                    position: [100, 100],
+                    opacity: 50
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    position: [800, 400],
+                    opacity: 90,
+                    scale: [150, 150]
+                }
+            ],
+            skipErrors: true
+        };
+        
+        logAlert("测试错误处理（跳过错误）...");
+        var result4 = batchSetLayerProperties(testArgs4);
+        logAlert("错误处理测试结果:\n" + result4);
+        
+        logAlert("batchSetLayerProperties 测试完成!");
+        
+        return { status: "success", message: "所有测试用例已执行完成" };
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return { status: "error", message: error.toString() };
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testBatchSetLayerProperties(); 

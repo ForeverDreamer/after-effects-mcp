@@ -261,4 +261,67 @@ function getProjectInfo(args) {
             message: error.toString()
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testGetProjectInfo() {
+    try {
+        logAlert("开始测试 getProjectInfo 函数...");
+        
+        // 测试用例1: 获取基本项目信息
+        var testArgs1 = {
+            includeItems: false,
+            includeCompositions: false
+        };
+        
+        logAlert("测试基本项目信息获取...");
+        var result1 = getProjectInfo(testArgs1);
+        logAlert("基本信息测试结果:\n" + result1);
+        
+        // 测试用例2: 获取完整项目信息
+        var testArgs2 = {
+            includeItems: true,
+            includeCompositions: true,
+            maxItems: 50,
+            maxCompositions: 10
+        };
+        
+        logAlert("测试完整项目信息获取...");
+        var result2 = getProjectInfo(testArgs2);
+        logAlert("完整信息测试结果:\n" + result2);
+        
+        // 测试用例3: 获取项目信息和系统信息
+        var testArgs3 = {
+            includeItems: true,
+            includeSystemInfo: true,
+            maxItems: 25
+        };
+        
+        logAlert("测试项目和系统信息获取...");
+        var result3 = getProjectInfo(testArgs3);
+        logAlert("系统信息测试结果:\n" + result3);
+        
+        // 测试用例4: 获取详细的元数据信息
+        var testArgs4 = {
+            includeItems: true,
+            includeCompositions: true,
+            includeFootage: true,
+            includeMetadata: true,
+            maxItems: 100
+        };
+        
+        logAlert("测试详细元数据信息获取...");
+        var result4 = getProjectInfo(testArgs4);
+        logAlert("元数据测试结果:\n" + result4);
+        
+        logAlert("getProjectInfo 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testGetProjectInfo(); 

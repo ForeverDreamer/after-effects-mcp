@@ -125,7 +125,14 @@ function batchCreateShapeLayers(args) {
                 }
                 
                 var validShapeTypes = ["rectangle", "ellipse", "polygon", "star"];
-                if (validShapeTypes.indexOf(layerConfig.shapeType) === -1) {
+                var isValidShapeType = false;
+                for (var j = 0; j < validShapeTypes.length; j++) {
+                    if (validShapeTypes[j] === layerConfig.shapeType) {
+                        isValidShapeType = true;
+                        break;
+                    }
+                }
+                if (!isValidShapeType) {
                     throw new Error("Invalid shape type: " + layerConfig.shapeType);
                 }
                 
@@ -158,4 +165,126 @@ function batchCreateShapeLayers(args) {
             itemName: "shape layer"
         }
     );
-} 
+}
+
+// ========== 测试函数 ==========
+function testBatchCreateShapeLayers() {
+    try {
+        logAlert("开始测试 batchCreateShapeLayers 函数...");
+        
+        // 测试用例1: 批量创建基础形状
+        var testArgs1 = {
+            shapeLayers: [
+                {
+                    shapeType: "rectangle",
+                    compName: "",  // 使用当前活动合成
+                    size: [200, 100],
+                    position: [200, 200],
+                    fillColor: [1, 0, 0],
+                    name: "Red Rectangle"
+                },
+                {
+                    shapeType: "ellipse",
+                    compName: "",
+                    size: [150, 150],
+                    position: [500, 200],
+                    fillColor: [0, 1, 0],
+                    strokeColor: [0, 0, 0],
+                    strokeWidth: 5,
+                    name: "Green Circle"
+                }
+            ]
+        };
+        
+        logAlert("测试批量创建基础形状...");
+        var result1 = batchCreateShapeLayers(testArgs1);
+        logAlert("基础形状批量创建测试结果:\n" + result1);
+        
+        // 测试用例2: 批量创建多边形和星形
+        var testArgs2 = {
+            shapeLayers: [
+                {
+                    shapeType: "polygon",
+                    compName: "",
+                    size: [120, 120],
+                    position: [800, 200],
+                    fillColor: [0, 0, 1],
+                    sides: 6,
+                    name: "Blue Hexagon"
+                },
+                {
+                    shapeType: "star",
+                    compName: "",
+                    size: [140, 140],
+                    position: [1100, 200],
+                    fillColor: [1, 1, 0],
+                    innerRadius: 50,
+                    outerRadius: 70,
+                    points: 5,
+                    name: "Yellow Star"
+                }
+            ]
+        };
+        
+        logAlert("测试批量创建多边形和星形...");
+        var result2 = batchCreateShapeLayers(testArgs2);
+        logAlert("多边形星形批量创建测试结果:\n" + result2);
+        
+        // 测试用例3: 仅验证模式
+        var testArgs3 = {
+            shapeLayers: [
+                {
+                    shapeType: "rectangle",
+                    compName: "",
+                    size: [300, 200],
+                    position: [960, 540],
+                    fillColor: [0.5, 0.5, 0.5],
+                    name: "Validation Rectangle"
+                }
+            ],
+            validateOnly: true
+        };
+        
+        logAlert("测试仅验证模式...");
+        var result3 = batchCreateShapeLayers(testArgs3);
+        logAlert("仅验证模式测试结果:\n" + result3);
+        
+        // 测试用例4: 错误处理（跳过错误）
+        var testArgs4 = {
+            shapeLayers: [
+                {
+                    shapeType: "invalid_shape",  // 无效形状类型
+                    compName: "",
+                    size: [100, 100],
+                    position: [400, 400],
+                    name: "Invalid Shape"
+                },
+                {
+                    shapeType: "ellipse",
+                    compName: "",
+                    size: [180, 180],
+                    position: [600, 400],
+                    fillColor: [1, 0, 1],
+                    name: "Valid Magenta Circle"
+                }
+            ],
+            skipErrors: true
+        };
+        
+        logAlert("测试错误处理（跳过错误）...");
+        var result4 = batchCreateShapeLayers(testArgs4);
+        logAlert("错误处理测试结果:\n" + result4);
+        
+        logAlert("batchCreateShapeLayers 测试完成!");
+        
+        return { status: "success", message: "所有测试用例已执行完成" };
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return { status: "error", message: error.toString() };
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testBatchCreateShapeLayers(); 

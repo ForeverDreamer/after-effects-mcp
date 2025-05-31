@@ -217,4 +217,126 @@ function batchCreateSolidLayers(args) {
             }
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testBatchCreateSolidLayers() {
+    try {
+        logAlert("开始测试 batchCreateSolidLayers 函数...");
+        
+        // 测试用例1: 批量创建背景图层
+        var testArgs1 = {
+            solidLayers: [
+                {
+                    color: [0.2, 0.2, 0.2],  // 深灰色背景
+                    compName: "",  // 使用当前活动合成
+                    name: "Dark Background",
+                    width: 1920,
+                    height: 1080
+                },
+                {
+                    color: [1, 1, 1],  // 白色前景
+                    compName: "",
+                    name: "White Overlay",
+                    width: 800,
+                    height: 600,
+                    opacity: 80
+                }
+            ]
+        };
+        
+        logAlert("测试批量创建背景图层...");
+        var result1 = batchCreateSolidLayers(testArgs1);
+        logAlert("背景图层批量创建测试结果:\n" + result1);
+        
+        // 测试用例2: 批量创建不同颜色纯色
+        var testArgs2 = {
+            solidLayers: [
+                {
+                    color: [1, 0, 0],  // 红色
+                    compName: "",
+                    name: "Red Layer",
+                    width: 400,
+                    height: 300,
+                    position: [200, 200]
+                },
+                {
+                    color: [0, 1, 0],  // 绿色
+                    compName: "",
+                    name: "Green Layer",
+                    width: 400,
+                    height: 300,
+                    position: [760, 200]
+                },
+                {
+                    color: [0, 0, 1],  // 蓝色
+                    compName: "",
+                    name: "Blue Layer",
+                    width: 400,
+                    height: 300,
+                    position: [1320, 200]
+                }
+            ]
+        };
+        
+        logAlert("测试批量创建不同颜色纯色...");
+        var result2 = batchCreateSolidLayers(testArgs2);
+        logAlert("彩色纯色批量创建测试结果:\n" + result2);
+        
+        // 测试用例3: 仅验证模式
+        var testArgs3 = {
+            solidLayers: [
+                {
+                    color: [0.5, 0.5, 0.5],
+                    compName: "",
+                    name: "Validation Layer",
+                    width: 1920,
+                    height: 1080
+                }
+            ],
+            validateOnly: true
+        };
+        
+        logAlert("测试仅验证模式...");
+        var result3 = batchCreateSolidLayers(testArgs3);
+        logAlert("仅验证模式测试结果:\n" + result3);
+        
+        // 测试用例4: 错误处理（跳过错误）
+        var testArgs4 = {
+            solidLayers: [
+                {
+                    color: [1.5, 0, 0],  // 无效颜色值（>1）
+                    compName: "",
+                    name: "Invalid Color Layer",
+                    width: 200,
+                    height: 200
+                },
+                {
+                    color: [1, 1, 0],  // 有效的黄色
+                    compName: "",
+                    name: "Valid Yellow Layer",
+                    width: 300,
+                    height: 300,
+                    position: [960, 540]
+                }
+            ],
+            skipErrors: true
+        };
+        
+        logAlert("测试错误处理（跳过错误）...");
+        var result4 = batchCreateSolidLayers(testArgs4);
+        logAlert("错误处理测试结果:\n" + result4);
+        
+        logAlert("batchCreateSolidLayers 测试完成!");
+        
+        return { status: "success", message: "所有测试用例已执行完成" };
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return { status: "error", message: error.toString() };
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testBatchCreateSolidLayers(); 

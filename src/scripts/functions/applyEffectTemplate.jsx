@@ -168,4 +168,91 @@ function applyEffectTemplate(args) {
     } catch (error) {
         return createStandardResponse("error", "Unexpected error: " + error.toString());
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testApplyEffectTemplate() {
+    try {
+        logAlert("开始测试 applyEffectTemplate 函数...");
+        
+        // 测试用例1: 应用高斯模糊模板
+        var testArgs1 = {
+            compName: "",  // 使用当前活动合成
+            layerIndex: 1,
+            templateName: "gaussian-blur",
+            customSettings: {
+                "Blurriness": 15
+            }
+        };
+        
+        logAlert("测试高斯模糊模板...");
+        var result1 = applyEffectTemplate(testArgs1);
+        logAlert("高斯模糊模板测试结果:\n" + result1);
+        
+        // 测试用例2: 应用投影模板
+        var testArgs2 = {
+            compName: "",
+            layerIndex: 1,
+            templateName: "drop-shadow",
+            customSettings: {
+                "Opacity": 60,
+                "Distance": 15
+            }
+        };
+        
+        logAlert("测试投影模板...");
+        var result2 = applyEffectTemplate(testArgs2);
+        logAlert("投影模板测试结果:\n" + result2);
+        
+        // 测试用例3: 应用发光模板
+        var testArgs3 = {
+            compName: "",
+            layerIndex: 1,
+            templateName: "glow",
+            customSettings: {
+                "Glow Threshold": 40,
+                "Glow Radius": 20
+            }
+        };
+        
+        logAlert("测试发光模板...");
+        var result3 = applyEffectTemplate(testArgs3);
+        logAlert("发光模板测试结果:\n" + result3);
+        
+        // 测试用例4: 应用亮度对比度模板
+        var testArgs4 = {
+            compName: "",
+            layerIndex: 1,
+            templateName: "brightness-contrast",
+            customSettings: {
+                "Brightness": 20,
+                "Contrast": 30
+            }
+        };
+        
+        logAlert("测试亮度对比度模板...");
+        var result4 = applyEffectTemplate(testArgs4);
+        logAlert("亮度对比度模板测试结果:\n" + result4);
+        
+        // 测试用例5: 应用电影风格模板（链式效果）
+        var testArgs5 = {
+            compName: "",
+            layerIndex: 1,
+            templateName: "cinematic-look"
+        };
+        
+        logAlert("测试电影风格模板...");
+        var result5 = applyEffectTemplate(testArgs5);
+        logAlert("电影风格模板测试结果:\n" + result5);
+        
+        logAlert("applyEffectTemplate 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testApplyEffectTemplate(); 

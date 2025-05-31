@@ -170,12 +170,12 @@ function batchSetLayerExpressions(args) {
                         results.successful++;
                     } else {
                         // 实际设置表达式
-                        var setResult = setLayerExpression(
-                            expressionConfig.compName,
-                            expressionConfig.layerIndex,
-                            expressionConfig.propertyName,
-                            expressionConfig.expressionString
-                        );
+                        var setResult = setLayerExpression({
+                            compName: expressionConfig.compName,
+                            layerIndex: expressionConfig.layerIndex,
+                            propertyName: expressionConfig.propertyName,
+                            expressionString: expressionConfig.expressionString
+                        });
                         var parsedResult = JSON.parse(setResult);
                         
                         if (parsedResult.success) {
@@ -236,4 +236,135 @@ function batchSetLayerExpressions(args) {
             }
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testBatchSetLayerExpressions() {
+    try {
+        logAlert("开始测试 batchSetLayerExpressions 函数...");
+        
+        // 测试用例1: 批量摆动表达式
+        var testArgs1 = {
+            expressions: [
+                {
+                    compName: "",  // 使用当前活动合成
+                    layerIndex: 1,
+                    propertyName: "Position",
+                    expressionString: "wiggle(2, 30)"
+                },
+                {
+                    compName: "",
+                    layerIndex: 2,
+                    propertyName: "Scale", 
+                    expressionString: "s = Math.sin(time * 3) * 10; [value[0] + s, value[1] + s]"
+                }
+            ]
+        };
+        
+        logAlert("测试批量摆动表达式...");
+        var result1 = batchSetLayerExpressions(testArgs1);
+        logAlert("批量摆动表达式测试结果:\n" + result1);
+        
+        // 测试用例2: 批量旋转和透明度表达式
+        var testArgs2 = {
+            expressions: [
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Rotation",
+                    expressionString: "time * 45"
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Opacity",
+                    expressionString: "50 + Math.sin(time * 2) * 50"
+                },
+                {
+                    compName: "",
+                    layerIndex: 2,
+                    propertyName: "Position",
+                    expressionString: "value + [Math.sin(time) * 50, Math.cos(time) * 30]"
+                }
+            ]
+        };
+        
+        logAlert("测试批量旋转和透明度表达式...");
+        var result2 = batchSetLayerExpressions(testArgs2);
+        logAlert("批量旋转表达式测试结果:\n" + result2);
+        
+        // 测试用例3: 仅验证模式
+        var testArgs3 = {
+            expressions: [
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Scale",
+                    expressionString: "[100 + Math.sin(time) * 20, 100 + Math.cos(time) * 20]"
+                }
+            ],
+            validateOnly: true
+        };
+        
+        logAlert("测试仅验证模式...");
+        var result3 = batchSetLayerExpressions(testArgs3);
+        logAlert("仅验证模式测试结果:\n" + result3);
+        
+        // 测试用例4: 错误处理（跳过错误）
+        var testArgs4 = {
+            expressions: [
+                {
+                    compName: "",
+                    layerIndex: 999,  // 不存在的图层
+                    propertyName: "Position",
+                    expressionString: "wiggle(1, 20)"
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Position",
+                    expressionString: "value + [Math.random() * 10, Math.random() * 10]"
+                }
+            ],
+            skipErrors: true
+        };
+        
+        logAlert("测试错误处理（跳过错误）...");
+        var result4 = batchSetLayerExpressions(testArgs4);
+        logAlert("错误处理测试结果:\n" + result4);
+        
+        // 测试用例5: 移除表达式
+        var testArgs5 = {
+            expressions: [
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Position",
+                    expressionString: ""  // 空字符串移除表达式
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Rotation",
+                    expressionString: ""
+                }
+            ]
+        };
+        
+        logAlert("测试移除表达式...");
+        var result5 = batchSetLayerExpressions(testArgs5);
+        logAlert("移除表达式测试结果:\n" + result5);
+        
+        logAlert("batchSetLayerExpressions 测试完成!");
+        
+        return { status: "success", message: "所有测试用例已执行完成" };
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return { status: "error", message: error.toString() };
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testBatchSetLayerExpressions(); 

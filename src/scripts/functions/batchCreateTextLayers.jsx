@@ -217,4 +217,136 @@ function batchCreateTextLayers(args) {
             }
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testBatchCreateTextLayers() {
+    try {
+        logAlert("开始测试 batchCreateTextLayers 函数...");
+        
+        // 测试用例1: 批量创建标题文本
+        var testArgs1 = {
+            textLayers: [
+                {
+                    text: "主标题",
+                    compName: "",  // 使用当前活动合成
+                    position: [960, 200],
+                    fontSize: 72,
+                    fillColor: [1, 1, 1],
+                    name: "Main Title"
+                },
+                {
+                    text: "副标题",
+                    compName: "",
+                    position: [960, 300],
+                    fontSize: 48,
+                    fillColor: [0.8, 0.8, 0.8],
+                    name: "Sub Title"
+                },
+                {
+                    text: "描述文本",
+                    compName: "",
+                    position: [960, 400],
+                    fontSize: 36,
+                    fillColor: [0.6, 0.6, 0.6],
+                    name: "Description Text"
+                }
+            ]
+        };
+        
+        logAlert("测试批量创建标题文本...");
+        var result1 = batchCreateTextLayers(testArgs1);
+        logAlert("标题文本批量创建测试结果:\n" + result1);
+        
+        // 测试用例2: 批量创建不同颜色文本
+        var testArgs2 = {
+            textLayers: [
+                {
+                    text: "红色文本",
+                    compName: "",
+                    position: [300, 600],
+                    fontSize: 48,
+                    fillColor: [1, 0, 0],
+                    name: "Red Text"
+                },
+                {
+                    text: "绿色文本",
+                    compName: "",
+                    position: [600, 600],
+                    fontSize: 48,
+                    fillColor: [0, 1, 0],
+                    name: "Green Text"
+                },
+                {
+                    text: "蓝色文本",
+                    compName: "",
+                    position: [900, 600],
+                    fontSize: 48,
+                    fillColor: [0, 0, 1],
+                    name: "Blue Text"
+                }
+            ]
+        };
+        
+        logAlert("测试批量创建不同颜色文本...");
+        var result2 = batchCreateTextLayers(testArgs2);
+        logAlert("彩色文本批量创建测试结果:\n" + result2);
+        
+        // 测试用例3: 仅验证模式
+        var testArgs3 = {
+            textLayers: [
+                {
+                    text: "验证文本",
+                    compName: "",
+                    position: [960, 800],
+                    fontSize: 60,
+                    fillColor: [1, 1, 0],
+                    name: "Validation Text"
+                }
+            ],
+            validateOnly: true
+        };
+        
+        logAlert("测试仅验证模式...");
+        var result3 = batchCreateTextLayers(testArgs3);
+        logAlert("仅验证模式测试结果:\n" + result3);
+        
+        // 测试用例4: 错误处理（跳过错误）
+        var testArgs4 = {
+            textLayers: [
+                {
+                    text: "",  // 空文本会导致错误
+                    compName: "",
+                    position: [960, 900],
+                    fontSize: 48,
+                    name: "Empty Text"
+                },
+                {
+                    text: "有效文本",
+                    compName: "",
+                    position: [960, 950],
+                    fontSize: 48,
+                    fillColor: [1, 0, 1],
+                    name: "Valid Text"
+                }
+            ],
+            skipErrors: true
+        };
+        
+        logAlert("测试错误处理（跳过错误）...");
+        var result4 = batchCreateTextLayers(testArgs4);
+        logAlert("错误处理测试结果:\n" + result4);
+        
+        logAlert("batchCreateTextLayers 测试完成!");
+        
+        return { status: "success", message: "所有测试用例已执行完成" };
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return { status: "error", message: error.toString() };
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testBatchCreateTextLayers(); 

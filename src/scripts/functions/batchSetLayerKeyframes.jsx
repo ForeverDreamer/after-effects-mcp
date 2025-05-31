@@ -263,4 +263,149 @@ function batchSetLayerKeyframes(args) {
             }
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testBatchSetLayerKeyframes() {
+    try {
+        logAlert("开始测试 batchSetLayerKeyframes 函数...");
+        
+        // 测试用例1: 批量淡入动画关键帧
+        var testArgs1 = {
+            keyframes: [
+                {
+                    compName: "",  // 使用当前活动合成
+                    layerIndex: 1,
+                    propertyName: "Opacity",
+                    timeInSeconds: 0,
+                    value: 0
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Opacity",
+                    timeInSeconds: 1,
+                    value: 100
+                },
+                {
+                    compName: "",
+                    layerIndex: 2,
+                    propertyName: "Opacity",
+                    timeInSeconds: 0.5,
+                    value: 0
+                },
+                {
+                    compName: "",
+                    layerIndex: 2,
+                    propertyName: "Opacity",
+                    timeInSeconds: 1.5,
+                    value: 100
+                }
+            ]
+        };
+        
+        logAlert("测试批量淡入动画关键帧...");
+        var result1 = batchSetLayerKeyframes(testArgs1);
+        logAlert("批量淡入动画测试结果:\n" + result1);
+        
+        // 测试用例2: 批量位置和缩放动画
+        var testArgs2 = {
+            keyframes: [
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Position",
+                    timeInSeconds: 0,
+                    value: [100, 540, 0]
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Position",
+                    timeInSeconds: 2,
+                    value: [1820, 540, 0]
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Scale",
+                    timeInSeconds: 0,
+                    value: [50, 50, 100]
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Scale",
+                    timeInSeconds: 2,
+                    value: [150, 150, 100]
+                }
+            ]
+        };
+        
+        logAlert("测试批量位置和缩放动画...");
+        var result2 = batchSetLayerKeyframes(testArgs2);
+        logAlert("批量位置动画测试结果:\n" + result2);
+        
+        // 测试用例3: 仅验证模式
+        var testArgs3 = {
+            keyframes: [
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Rotation",
+                    timeInSeconds: 0,
+                    value: 0
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Rotation",
+                    timeInSeconds: 1,
+                    value: 360
+                }
+            ],
+            validateOnly: true
+        };
+        
+        logAlert("测试仅验证模式...");
+        var result3 = batchSetLayerKeyframes(testArgs3);
+        logAlert("仅验证模式测试结果:\n" + result3);
+        
+        // 测试用例4: 错误处理（跳过错误）
+        var testArgs4 = {
+            keyframes: [
+                {
+                    compName: "",
+                    layerIndex: 999,  // 不存在的图层
+                    propertyName: "Opacity",
+                    timeInSeconds: 0,
+                    value: 50
+                },
+                {
+                    compName: "",
+                    layerIndex: 1,
+                    propertyName: "Opacity",
+                    timeInSeconds: 3,
+                    value: 80
+                }
+            ],
+            skipErrors: true
+        };
+        
+        logAlert("测试错误处理（跳过错误）...");
+        var result4 = batchSetLayerKeyframes(testArgs4);
+        logAlert("错误处理测试结果:\n" + result4);
+        
+        logAlert("batchSetLayerKeyframes 测试完成!");
+        
+        return { status: "success", message: "所有测试用例已执行完成" };
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return { status: "error", message: error.toString() };
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testBatchSetLayerKeyframes(); 

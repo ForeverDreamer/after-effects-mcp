@@ -2,6 +2,7 @@
 // Sets properties of a specified layer in a composition (enhanced version with text support)
 
 //@include "utils.jsx"
+//@include "layerOperations.jsx"
 
 // ========== 参数验证Schema ==========
 var SET_LAYER_PROPERTIES_SCHEMA = {
@@ -275,4 +276,72 @@ function setLayerProperties(args) {
             message: error.toString() 
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testSetLayerProperties() {
+    try {
+        logAlert("开始测试 setLayerProperties 函数...");
+        
+        // 测试用例1: 设置图层位置和缩放
+        var testArgs1 = {
+            compName: "",  // 使用当前活动合成
+            layerIndex: 1,
+            position: [500, 300],
+            scale: [150, 150],
+            opacity: 80
+        };
+        
+        logAlert("测试图层位置和缩放设置...");
+        var result1 = setLayerProperties(testArgs1);
+        logAlert("位置缩放测试结果:\n" + result1);
+        
+        // 测试用例2: 设置图层旋转和时间
+        var testArgs2 = {
+            compName: "",
+            layerIndex: 1,
+            rotation: 45,
+            startTime: 2.0,
+            duration: 8.0
+        };
+        
+        logAlert("测试图层旋转和时间设置...");
+        var result2 = setLayerProperties(testArgs2);
+        logAlert("旋转时间测试结果:\n" + result2);
+        
+        // 测试用例3: 修改文本图层内容（如果第一个图层是文本）
+        var testArgs3 = {
+            compName: "",
+            layerIndex: 1,
+            text: "Modified Text",
+            fontSize: 48,
+            fillColor: [0, 1, 0]  // 绿色
+        };
+        
+        logAlert("测试文本图层属性修改...");
+        var result3 = setLayerProperties(testArgs3);
+        logAlert("文本修改测试结果:\n" + result3);
+        
+        // 测试用例4: 通过图层名称设置属性
+        var testArgs4 = {
+            compName: "",
+            layerName: "Test Layer",  // 假设存在此名称的图层
+            position: [960, 540],
+            opacity: 50
+        };
+        
+        logAlert("测试通过图层名称设置属性...");
+        var result4 = setLayerProperties(testArgs4);
+        logAlert("图层名称测试结果:\n" + result4);
+        
+        logAlert("setLayerProperties 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testSetLayerProperties(); 

@@ -111,4 +111,79 @@ function createTextLayer(args) {
     
     // 使用统一的图层创建函数
     return createLayer("text", params.compName, params, "Create Text Layer");
-} 
+}
+
+// ========== 测试函数 ==========
+function testCreateTextLayer() {
+    try {
+        logAlert("开始测试 createTextLayer 函数...");
+        
+        // 测试用例1: 创建基础文本
+        var testArgs1 = {
+            compName: "",  // 使用当前活动合成
+            text: "Hello World",
+            fontSize: 72,
+            fillColor: [1, 0, 0],  // 红色
+            name: "Test Basic Text"
+        };
+        
+        logAlert("测试基础文本创建...");
+        var result1 = createTextLayer(testArgs1);
+        logAlert("基础文本测试结果:\n" + result1);
+        
+        // 测试用例2: 创建自定义字体文本
+        var testArgs2 = {
+            compName: "",
+            text: "Custom Font Text",
+            position: [500, 300],
+            fontSize: 48,
+            fontFamily: "Arial Bold",
+            fillColor: [0, 1, 0],  // 绿色
+            name: "Custom Font Text"
+        };
+        
+        logAlert("测试自定义字体文本...");
+        var result2 = createTextLayer(testArgs2);
+        logAlert("自定义字体测试结果:\n" + result2);
+        
+        // 测试用例3: 创建大尺寸文本
+        var testArgs3 = {
+            compName: "",
+            text: "BIG TEXT",
+            fontSize: 120,
+            fillColor: [0, 0, 1],  // 蓝色
+            position: [960, 200],
+            startTime: 2,
+            duration: 8,
+            name: "Big Text Layer"
+        };
+        
+        logAlert("测试大尺寸文本...");
+        var result3 = createTextLayer(testArgs3);
+        logAlert("大尺寸文本测试结果:\n" + result3);
+        
+        // 测试用例4: 创建多行文本
+        var testArgs4 = {
+            compName: "",
+            text: "Line 1\nLine 2\nLine 3",
+            fontSize: 36,
+            fillColor: [1, 1, 0],  // 黄色
+            position: [960, 600],
+            name: "Multi Line Text"
+        };
+        
+        logAlert("测试多行文本...");
+        var result4 = createTextLayer(testArgs4);
+        logAlert("多行文本测试结果:\n" + result4);
+        
+        logAlert("createTextLayer 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testCreateTextLayer(); 

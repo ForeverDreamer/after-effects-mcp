@@ -133,4 +133,76 @@ function applyEffect(args) {
             }
         });
     }, "Apply Effect");
-} 
+}
+
+// ========== 测试函数 ==========
+function testApplyEffect() {
+    try {
+        logAlert("开始测试 applyEffect 函数...");
+        
+        // 测试用例1: 添加高斯模糊
+        var testArgs1 = {
+            compName: "",  // 使用当前活动合成
+            layerIndex: 1,
+            effectName: "Gaussian Blur",
+            properties: {
+                "Blurriness": 10
+            }
+        };
+        
+        logAlert("测试高斯模糊效果...");
+        var result1 = applyEffect(testArgs1);
+        logAlert("高斯模糊测试结果:\n" + result1);
+        
+        // 测试用例2: 添加发光效果
+        var testArgs2 = {
+            compName: "",
+            layerIndex: 1,
+            effectName: "Glow",
+            properties: {
+                "Glow Intensity": 1.5,
+                "Glow Radius": 20
+            }
+        };
+        
+        logAlert("测试发光效果...");
+        var result2 = applyEffect(testArgs2);
+        logAlert("发光效果测试结果:\n" + result2);
+        
+        // 测试用例3: 添加阴影效果
+        var testArgs3 = {
+            compName: "",
+            layerIndex: 1,
+            effectName: "Drop Shadow",
+            properties: {
+                "Distance": 15,
+                "Softness": 10
+            }
+        };
+        
+        logAlert("测试阴影效果...");
+        var result3 = applyEffect(testArgs3);
+        logAlert("阴影效果测试结果:\n" + result3);
+        
+        // 测试用例4: 错误情况（无效图层索引）
+        var testArgs4 = {
+            compName: "",
+            layerIndex: 999,  // 不存在的图层索引
+            effectName: "Blur"
+        };
+        
+        logAlert("测试错误情况（无效图层索引）...");
+        var result4 = applyEffect(testArgs4);
+        logAlert("错误测试结果:\n" + result4);
+        
+        logAlert("applyEffect 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testApplyEffect(); 

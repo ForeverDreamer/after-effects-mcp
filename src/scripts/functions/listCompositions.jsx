@@ -103,4 +103,57 @@ function listCompositions(args) {
             message: error.toString()
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testListCompositions() {
+    try {
+        logAlert("开始测试 listCompositions 函数...");
+        
+        // 测试用例1: 列出所有合成（默认参数）
+        var testArgs1 = {};
+        
+        logAlert("测试默认合成列表...");
+        var result1 = listCompositions(testArgs1);
+        logAlert("默认列表测试结果:\n" + result1);
+        
+        // 测试用例2: 列出合成不包含详细信息
+        var testArgs2 = {
+            includeDetails: false
+        };
+        
+        logAlert("测试简单合成列表...");
+        var result2 = listCompositions(testArgs2);
+        logAlert("简单列表测试结果:\n" + result2);
+        
+        // 测试用例3: 按持续时间排序
+        var testArgs3 = {
+            sortBy: "duration",
+            includeDetails: true
+        };
+        
+        logAlert("测试按持续时间排序...");
+        var result3 = listCompositions(testArgs3);
+        logAlert("持续时间排序测试结果:\n" + result3);
+        
+        // 测试用例4: 按尺寸排序
+        var testArgs4 = {
+            sortBy: "size",
+            includeDetails: true
+        };
+        
+        logAlert("测试按尺寸排序...");
+        var result4 = listCompositions(testArgs4);
+        logAlert("尺寸排序测试结果:\n" + result4);
+        
+        logAlert("listCompositions 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testListCompositions(); 

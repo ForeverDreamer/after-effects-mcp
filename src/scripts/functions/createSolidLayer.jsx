@@ -1,5 +1,5 @@
 // createSolidLayer.jsx
-// Creates a new solid layer in the specified composition
+// Creates a new solid color layer in the specified composition
 
 //@include "utils.jsx"
 //@include "layerOperations.jsx"
@@ -104,4 +104,72 @@ function createSolidLayer(args) {
     
     // 使用统一的图层创建函数
     return createLayer("solid", params.compName, params, "Create Solid Layer");
-} 
+}
+
+// ========== 测试函数 ==========
+function testCreateSolidLayer() {
+    try {
+        logAlert("开始测试 createSolidLayer 函数...");
+        
+        // 测试用例1: 创建红色背景
+        var testArgs1 = {
+            compName: "",  // 使用当前活动合成
+            color: [1, 0, 0],  // 红色
+            name: "Red Background"
+        };
+        
+        logAlert("测试红色背景创建...");
+        var result1 = createSolidLayer(testArgs1);
+        logAlert("红色背景测试结果:\n" + result1);
+        
+        // 测试用例2: 创建自定义尺寸绿色纯色
+        var testArgs2 = {
+            compName: "",
+            color: [0, 1, 0],  // 绿色
+            width: 500,
+            height: 300,
+            name: "Green Solid Custom Size"
+        };
+        
+        logAlert("测试自定义尺寸绿色纯色...");
+        var result2 = createSolidLayer(testArgs2);
+        logAlert("绿色纯色测试结果:\n" + result2);
+        
+        // 测试用例3: 创建蓝色调整图层样式
+        var testArgs3 = {
+            compName: "",
+            color: [0, 0, 1],  // 蓝色
+            width: 800,
+            height: 600,
+            startTime: 1,
+            duration: 10,
+            name: "Blue Solid Timed"
+        };
+        
+        logAlert("测试定时蓝色纯色...");
+        var result3 = createSolidLayer(testArgs3);
+        logAlert("定时蓝色纯色测试结果:\n" + result3);
+        
+        // 测试用例4: 创建半透明白色纯色
+        var testArgs4 = {
+            compName: "",
+            color: [1, 1, 1],  // 白色
+            name: "White Solid Background",
+            pixelAspect: 1.0
+        };
+        
+        logAlert("测试白色背景纯色...");
+        var result4 = createSolidLayer(testArgs4);
+        logAlert("白色背景测试结果:\n" + result4);
+        
+        logAlert("createSolidLayer 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testCreateSolidLayer(); 

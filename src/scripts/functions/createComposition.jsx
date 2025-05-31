@@ -148,4 +148,76 @@ function createComposition(args) {
             message: error.toString()
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testCreateComposition() {
+    try {
+        logAlert("开始测试 createComposition 函数...");
+        
+        // 测试用例1: 创建HD合成
+        var testArgs1 = {
+            name: "Test_HD_Composition",
+            width: 1920,
+            height: 1080,
+            duration: 10.0,
+            frameRate: 30.0
+        };
+        
+        logAlert("测试HD合成创建...");
+        var result1 = createComposition(testArgs1);
+        logAlert("HD合成测试结果:\n" + result1);
+        
+        // // 测试用例2: 创建4K合成带背景色
+        // var testArgs2 = {
+        //     name: "Test_4K_Composition",
+        //     width: 3840,
+        //     height: 2160,
+        //     duration: 15.0,
+        //     frameRate: 24.0,
+        //     backgroundColor: { r: 255, g: 255, b: 255 }  // 白色背景
+        // };
+        
+        // logAlert("测试4K合成创建...");
+        // var result2 = createComposition(testArgs2);
+        // logAlert("4K合成测试结果:\n" + result2);
+        
+        // // 测试用例3: 创建方形合成
+        // var testArgs3 = {
+        //     name: "Test_Square_Composition",
+        //     width: 1080,
+        //     height: 1080,
+        //     duration: 5.0,
+        //     frameRate: 60.0,
+        //     backgroundColor: { r: 50, g: 50, b: 50 }  // 深灰色背景
+        // };
+        
+        // logAlert("测试方形合成创建...");
+        // var result3 = createComposition(testArgs3);
+        // logAlert("方形合成测试结果:\n" + result3);
+        
+        // // 测试用例4: 创建竖屏合成
+        // var testArgs4 = {
+        //     name: "Test_Portrait_Composition",
+        //     width: 1080,
+        //     height: 1920,
+        //     duration: 30.0,
+        //     frameRate: 25.0,
+        //     pixelAspect: 1.0
+        // };
+        
+        // logAlert("测试竖屏合成创建...");
+        // var result4 = createComposition(testArgs4);
+        // logAlert("竖屏合成测试结果:\n" + result4);
+        
+        logAlert("createComposition 测试完成!");
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return; // 停止执行后续代码
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testCreateComposition(); 

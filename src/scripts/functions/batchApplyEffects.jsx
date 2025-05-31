@@ -385,4 +385,130 @@ function applyEffectTemplateToLayer(layer, templateName, customSettings) {
     }
     
     return effect;
-} 
+}
+
+// ========== 测试函数 ==========
+function testBatchApplyEffects() {
+    try {
+        logAlert("开始测试 batchApplyEffects 函数...");
+        
+        // 测试用例1: 混合批量应用（效果和模板）
+        var testArgs1 = {
+            applications: [
+                {
+                    type: "template",
+                    compName: "",  // 使用当前活动合成
+                    layerIndex: 1,
+                    templateName: "glow",
+                    customSettings: {
+                        "Glow Threshold": 40,
+                        "Glow Radius": 15
+                    }
+                },
+                {
+                    type: "effect",
+                    compName: "",
+                    layerIndex: 1,
+                    effectMatchName: "ADBE Gaussian Blur 2",
+                    effectSettings: {
+                        "Blurriness": 10
+                    }
+                }
+            ],
+            skipErrors: true
+        };
+        
+        logAlert("测试混合批量应用（效果和模板）...");
+        var result1 = batchApplyEffects(testArgs1);
+        logAlert("混合批量应用测试结果:\n" + result1);
+        
+        // 测试用例2: 批量模板应用
+        var testArgs2 = {
+            applications: [
+                {
+                    type: "template",
+                    compName: "",
+                    layerIndex: 1,
+                    templateName: "drop-shadow",
+                    customSettings: {
+                        "Opacity": 60,
+                        "Distance": 12
+                    }
+                },
+                {
+                    type: "template",
+                    compName: "",
+                    layerIndex: 1,
+                    templateName: "brightness-contrast",
+                    customSettings: {
+                        "Brightness": 15,
+                        "Contrast": 25
+                    }
+                }
+            ]
+        };
+        
+        logAlert("测试批量模板应用...");
+        var result2 = batchApplyEffects(testArgs2);
+        logAlert("批量模板应用测试结果:\n" + result2);
+        
+        // 测试用例3: 仅验证模式测试
+        var testArgs3 = {
+            applications: [
+                {
+                    type: "effect",
+                    compName: "",
+                    layerIndex: 1,
+                    effectMatchName: "ADBE Drop Shadow",
+                    effectSettings: {
+                        "Distance": 8,
+                        "Opacity": 50
+                    }
+                }
+            ],
+            validateOnly: true
+        };
+        
+        logAlert("测试仅验证模式...");
+        var result3 = batchApplyEffects(testArgs3);
+        logAlert("仅验证模式测试结果:\n" + result3);
+        
+        // 测试用例4: 测试错误处理
+        var testArgs4 = {
+            applications: [
+                {
+                    type: "template",
+                    compName: "",
+                    layerIndex: 999,  // 无效图层索引
+                    templateName: "glow"
+                },
+                {
+                    type: "effect",  // 有效应用
+                    compName: "",
+                    layerIndex: 1,
+                    effectMatchName: "ADBE Gaussian Blur 2",
+                    effectSettings: {
+                        "Blurriness": 5
+                    }
+                }
+            ],
+            skipErrors: true
+        };
+        
+        logAlert("测试错误处理（跳过错误）...");
+        var result4 = batchApplyEffects(testArgs4);
+        logAlert("错误处理测试结果:\n" + result4);
+        
+        logAlert("batchApplyEffects 测试完成!");
+        
+        return { status: "success", message: "所有测试用例已执行完成" };
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return { status: "error", message: error.toString() };
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testBatchApplyEffects(); 

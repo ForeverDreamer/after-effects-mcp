@@ -120,7 +120,7 @@ function getLayerInfo(args) {
             var layerType = getLayerType(layer);
             
             // Filter by layer types if specified
-            if (params.layerIndices.length > 0 && params.layerIndices.indexOf(i) === -1) {
+            if (params.layerIndices.length > 0 && arrayIndexOf(params.layerIndices, i) === -1) {
                 continue;
             }
             
@@ -219,4 +219,67 @@ function getLayerInfo(args) {
             message: error.toString()
         }, null, 2);
     }
-} 
+}
+
+// ========== 测试函数 ==========
+function testGetLayerInfo() {
+    try {
+        logAlert("开始测试 getLayerInfo 函数...");
+        
+        // 测试用例1: 获取基本图层信息
+        var testArgs1 = {
+            compName: "",  // 使用当前活动合成
+            includeProperties: false,
+            includeEffects: false
+        };
+        
+        logAlert("测试基本图层信息获取...");
+        var result1 = getLayerInfo(testArgs1);
+        logAlert("基本图层信息测试结果:\n" + result1);
+        
+        // 测试用例2: 获取详细图层信息
+        var testArgs2 = {
+            compName: "",
+            includeProperties: true,
+            includeEffects: false
+        };
+        
+        logAlert("测试详细图层信息获取...");
+        var result2 = getLayerInfo(testArgs2);
+        logAlert("详细图层信息测试结果:\n" + result2);
+        
+        // 测试用例3: 获取包含特效的图层信息
+        var testArgs3 = {
+            compName: "",
+            includeProperties: true,
+            includeEffects: true
+        };
+        
+        logAlert("测试包含特效的图层信息获取...");
+        var result3 = getLayerInfo(testArgs3);
+        logAlert("特效图层信息测试结果:\n" + result3);
+        
+        // 测试用例4: 获取指定图层的信息
+        var testArgs4 = {
+            compName: "",
+            includeProperties: true,
+            layerIndices: [1, 2]
+        };
+        
+        logAlert("测试指定图层信息获取...");
+        var result4 = getLayerInfo(testArgs4);
+        logAlert("指定图层信息测试结果:\n" + result4);
+        
+        logAlert("getLayerInfo 测试完成!");
+        
+        return { status: "success", message: "所有测试用例已执行完成" };
+        
+    } catch (error) {
+        logAlert("测试过程中发生错误: " + error.toString());
+        return { status: "error", message: error.toString() };
+    }
+}
+
+// 调用测试函数
+// 取消注释下面这行来运行测试
+// testGetLayerInfo(); 

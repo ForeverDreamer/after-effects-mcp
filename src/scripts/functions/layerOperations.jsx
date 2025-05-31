@@ -178,7 +178,7 @@ function setLayerProperty(layer, propertyPath, value) {
 }
 
 // ========== 图层关键帧设置函数 ==========
-function setLayerKeyframe(layer, propertyPath, time, value, interpolationType) {
+function setLayerKeyframeInternal(layer, propertyPath, time, value, interpolationType) {
     try {
         var property = layer.property(propertyPath);
         if (!property) {
